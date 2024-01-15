@@ -3,7 +3,30 @@
   <head>
     <link rel="icon" href="data:;base64,=">
 
-    <script defer src="./wisp.js"></script>
+    <script src="./wisp.js"></script>
+    <script src="./polyfill.js"></script>
+
+    <script>
+      let ws = new WispWebSocket("wss://debug.ading.dev/ws/alicesworld.tech:80");
+      ws.addEventListener("open", () => {
+        let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
+        ws.send(payload);
+      });
+      ws.addEventListener("message", (event) => {
+        let text = new TextDecoder().decode(event.data);
+        console.log("message from stream 1: ", text.slice(0, 128));
+      });
+
+      let ws2 = new WispWebSocket("wss://debug.ading.dev/ws/www.google.com:80");
+      ws2.addEventListener("open", () => {
+        let payload = "GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: keepalive\r\n\r\n";
+        ws2.send(payload);
+      });
+      ws2.addEventListener("message", (event) => {
+        let text = new TextDecoder().decode(event.data);
+        console.log("message from stream 2: ", text.slice(0, 128));
+      });
+    </script>
   </head>
   <body>
     <p>wisp client</p>

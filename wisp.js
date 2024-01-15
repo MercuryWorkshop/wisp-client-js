@@ -37,8 +37,9 @@ function create_packet(packet_type, stream_id, payload) {
   return packet;
 }
 
-class WispStream {
+class WispStream extends EventTarget {
   constructor(hostname, port, websocket, buffer_size, stream_id, connection) {
+    super();
     this.hostname = hostname;
     this.port = port;
     this.ws = websocket;
@@ -76,33 +77,35 @@ class WispStream {
     this.ws.send(packet);
     delete this.connection.active_streams[this.stream_id];
   }
-
-  onmessage(data) {}
-  onclose(reason) {}
 }
 
-class WispConnection {
+class WispConnection extends EventTarget {
   constructor(wisp_url) {
+    super();
     this.wisp_url = wisp_url;
     this.max_buffer_size = null;
     this.active_streams = {};
+    this.connected = false;
+
+    this.connect_ws();
   }
 
   connect_ws() {
-    return new Promise((resolve, reject) => {
-      this.ws = new WebSocket(this.wisp_url);
-      this.ws.binaryType = "arraybuffer";
-      let first_message = true;
-      this.ws.addEventListener("error", (event) => {
-        reject(event);
-      });
-      this.ws.addEventListener("message", (event) => {
-        this.on_ws_msg(event);
-        if (first_message) {
-          first_message = false;
-          resolve();
-        };
-      });
+    this.ws = new WebSocket(this.wisp_url, [protocol_string]);
+    this.ws.binaryType = "arraybuffer";
+    let first_message = true;
+    this.ws.addEventListener("error", (event) => {
+      let error_event = new Event("error");
+      this.dispatchEvent(error_event);
+    });
+    this.ws.addEventListener("message", (event) => {
+      this.on_ws_msg(event);
+      if (first_message) {
+        this.connected = true;
+        let open_event = new Event("open");
+        this.dispatchEvent(open_event);
+        first_message = false;
+      }
     });
   }
 
@@ -130,7 +133,8 @@ class WispConnection {
     let stream = this.active_streams[stream_id];
 
     if (packet_type === 0x02) { //DATA packets
-      stream.onmessage(payload);
+      let msg_event = new MessageEvent("message", {data: payload});
+      stream.dispatchEvent(msg_event);
     }
  
     else if (packet_type === 0x03 && stream_id == 0) { //initial CONTINUE packet
@@ -142,22 +146,9 @@ class WispConnection {
     }
 
     else if (packet_type === 0x04) { //CLOSE packets
-      stream.onclose(payload[0]);
+      let close_event = new CloseEvent("close", {code: payload[0]});
+      stream.dispatchEvent(close_event);
       delete this.active_streams[stream];
     }
   }
 }
-
-async function main() {
-  let connection = new WispConnection("wss://debug.ading.dev/ws", [protocol_string]);
-  await connection.connect_ws();
-  let stream = connection.create_stream("alicesworld.tech", 80);
-  stream.onmessage = (data) => {
-    console.log(new TextDecoder().decode(data));
-  }
-  let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
-  console.log(payload);
-  stream.send(new TextEncoder().encode(payload));
-  window.stream = stream;
-}
-main();
