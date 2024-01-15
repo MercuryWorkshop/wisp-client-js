@@ -1,6 +1,6 @@
 //polyfill the DOM Websocket API so that applications using wsproxy can easily use wisp with minimal changes
 
-const wisp_connections = {};
+const _wisp_connections = {};
 
 class WispWebSocket extends EventTarget {
   constructor(url, protocol) {
@@ -24,14 +24,14 @@ class WispWebSocket extends EventTarget {
 
   init_connection() {
     //create the stream
-    this.connection = wisp_connections[this.real_url];
+    this.connection = _wisp_connections[this.real_url];
 
     if (!this.connection) {
       this.connection = new WispConnection(this.real_url);
       this.connection.addEventListener("open", () => {
         this.init_stream();
       })
-      wisp_connections[this.real_url] = this.connection;
+      _wisp_connections[this.real_url] = this.connection;
     }
     else if (!this.connection.connected) {
       this.connection.addEventListener("open", () => {
@@ -39,7 +39,7 @@ class WispWebSocket extends EventTarget {
       });
     }
     else {
-      this.connection = wisp_connections[this.real_url];
+      this.connection = _wisp_connections[this.real_url];
       this.init_stream();
     }
   }
