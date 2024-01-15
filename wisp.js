@@ -87,6 +87,10 @@ class WispConnection extends EventTarget {
     this.active_streams = {};
     this.connected = false;
 
+    if (!this.wisp_url.endsWith("/")) {
+      throw "wisp endpoints must end with a trailing forward slash";
+    }
+
     this.connect_ws();
   }
 

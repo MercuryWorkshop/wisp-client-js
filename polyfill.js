@@ -17,7 +17,7 @@ class WispWebSocket extends EventTarget {
     let wsproxy_path = url_split.pop().split(":");
     this.host = wsproxy_path[0];
     this.port = parseInt(wsproxy_path[1]);
-    this.real_url = url_split.join("/");
+    this.real_url = url_split.join("/") + "/";
 
     this.init_connection();
   }
