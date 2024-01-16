@@ -47,6 +47,7 @@ class WispStream extends EventTarget {
     this.stream_id = stream_id;
     this.connection = connection;
     this.send_buffer = [];
+    this.open = true;
   }
 
   send(data) {
@@ -75,6 +76,7 @@ class WispStream extends EventTarget {
     let payload = array_from_uint(reason, 1)
     let packet = create_packet(0x04, this.stream_id, payload);
     this.ws.send(packet);
+    this.open = false;
     delete this.connection.active_streams[this.stream_id];
   }
 }

@@ -3,14 +3,25 @@
 const _wisp_connections = {};
 
 class WispWebSocket extends EventTarget {
-  constructor(url, protocol) {
+  constructor(url, protocols) {
     super();
     this.url = url;
-    this.protocol = protocol
+    this.protocols = protocols
     this.binaryType = "blob";
-    this.send_buffer = [];
-    this.stream == null;
+    this.stream = null;
     this.event_listeners = {};
+    this.connection = null;
+
+    //legacy event handlers
+    this.onopen = () => {};
+    this.onerror = () => {};
+    this.onmessage = () => {};
+    this.onclose = () => {};
+
+    this.CONNECTING = 0;
+    this.OPEN = 1;
+    this.CLOSING = 2;
+    this.CLOSED = 3;
     
     //parse the wsproxy url
     let url_split = this.url.split("/");
@@ -47,14 +58,27 @@ class WispWebSocket extends EventTarget {
   init_stream() {
     this.stream = this.connection.create_stream(this.host, this.port);
     this.stream.addEventListener("message", (event) => {
-      let msg_event = new MessageEvent("message", {data: event.data});
+      let data;
+      if (this.binaryType == "blob") {
+        data = new Blob(event.data);
+      }
+      else if (this.binaryType == "arraybuffer") {
+        data = event.data.buffer;
+      }
+      else {
+        throw "invalid binaryType string";
+      }
+      let msg_event = new MessageEvent("message", {data: data});
+      this.onmessage(msg_event);
       this.dispatchEvent(msg_event);
     });
     this.stream.addEventListener("close", (event) => {
       let close_event = new CloseEvent("close", {code: event.code});
+      this.onclose(close_event);
       this.dispatchEvent(close_event);
     })
     let open_event = new Event("open");
+    this.onopen(open_event);
     this.dispatchEvent(open_event);
   }
 
@@ -73,16 +97,16 @@ class WispWebSocket extends EventTarget {
     //any typedarray
     else if (data instanceof ArrayBuffer) {
       //dataview objects
-      if (data.isView() && data instanceof DataView) {
+      if (ArrayBuffer.isView(data) && data instanceof DataView) {
         data_array = new Uint8Array(data.buffer);
       }
       //regular typed arrays
-      else if (data.isView()) {
+      else if (ArrayBuffer.isView(data)) {
         data_array = Uint8Array.from(data);
       }
       //regular arraybuffers
       else {
-        data_array = new Uint8Array(buffer);
+        data_array = new Uint8Array(data);
       }
     }
     else {
@@ -93,5 +117,35 @@ class WispWebSocket extends EventTarget {
       throw "websocket is not ready";
     }
     this.stream.send(data_array);
+  }
+
+  close() {
+    this.stream.close(0x02);
+  }
+
+  get bufferedAmount() {
+    let total = 0;
+    for (let msg of this.stream.send_buffer) {
+      total += msg.length;
+    }
+    return total;
+  }
+
+  get extensions() {
+    return "";
+  }
+
+  get protocol() {
+    return "binary";
+  }
+
+  get readyState() {
+    if (!this.connection || !this.connection.connected) {
+      return this.CONNECTING;
+    }
+    if (this.stream.open) {
+      return this.OPEN;
+    }
+    return this.CLOSED;
   }
 }
