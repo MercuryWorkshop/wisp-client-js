@@ -17,7 +17,7 @@ conn.addEventListener("open", () => {
 ```
 
 ### Creating New Streams:
-Once you have your `WispConnection` object, and you have waited for the connection to be established, you can use the `WispConnection.create_stream` method to create new streams. The two arguments to this function are the hostname and port of the new stream, and a `WispStream` object will be returned. For receiving incoming messages, use the `message` event on the `WispStream` object. The returned data will always be a `Uint8Array`. The `close` event can be used to know when the stream is closed. Newly created streams are available for writing immediately, so you don't have to worry about 
+Once you have your `WispConnection` object, and you have waited for the connection to be established, you can use the `WispConnection.create_stream` method to create new streams. The two arguments to this function are the hostname and port of the new stream, and a `WispStream` object will be returned. For receiving incoming messages, use the `message` event on the `WispStream` object. The returned data will always be a `Uint8Array`. The `close` event can be used to know when the stream is closed. Newly created streams are available for writing immediately, so you don't have to worry about waiting to send your data.
 ```js
 let stream = conn.create_stream("www.google.com", 80);
 stream.addEventListener("message", (event) => {

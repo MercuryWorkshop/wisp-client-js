@@ -51,7 +51,7 @@ class WispStream extends EventTarget {
   }
 
   send(data) {
-    if (this.buffer_size > 0) {
+    if (this.buffer_size > 0 || !this.open) {
       //construct and send a DATA packet
       let packet = create_packet(0x02, this.stream_id, data);
       this.ws.send(packet);
@@ -73,6 +73,7 @@ class WispStream extends EventTarget {
 
   //construct and send a CLOSE packet
   close(reason=0x01) {
+    if (!this.open) return;
     let payload = array_from_uint(reason, 1)
     let packet = create_packet(0x04, this.stream_id, payload);
     this.ws.send(packet);
@@ -88,6 +89,7 @@ class WispConnection extends EventTarget {
     this.max_buffer_size = null;
     this.active_streams = {};
     this.connected = false;
+    this.next_stream_id = 1;
 
     if (!this.wisp_url.endsWith("/")) {
       throw "wisp endpoints must end with a trailing forward slash";
@@ -116,7 +118,8 @@ class WispConnection extends EventTarget {
   }
 
   create_stream(hostname, port) {
-    let stream_id = Math.random()*2**31|0;
+    let stream_id = this.next_stream_id
+    this.next_stream_id ++;
     let stream = new WispStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this);
 
     //construct CONNECT packet
@@ -152,7 +155,9 @@ class WispConnection extends EventTarget {
     }
 
     else if (packet_type === 0x04) { //CLOSE packets
+      if (!stream) return;
       let close_event = new CloseEvent("close", {code: payload[0]});
+      stream.open = false;
       stream.dispatchEvent(close_event);
       delete this.active_streams[stream];
     }

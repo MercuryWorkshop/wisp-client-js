@@ -9,8 +9,9 @@
     <script>
       let ws_url = `wss://${location.hostname}/ws/`
       let ws = new WispWebSocket(ws_url+"alicesworld.tech:80");
+      ws.binaryType = "arraybuffer";
       ws.addEventListener("open", () => {
-        let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
+        let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: close\r\n\r\n";
         ws.send(payload);
       });
       ws.addEventListener("message", (event) => {
@@ -19,8 +20,9 @@
       });
 
       let ws2 = new WispWebSocket(ws_url+"www.google.com:80");
+      ws2.binaryType = "arraybuffer";
       ws2.addEventListener("open", () => {
-        let payload = "GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: keepalive\r\n\r\n";
+        let payload = "GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
         ws2.send(payload);
       });
       ws2.addEventListener("message", (event) => {
