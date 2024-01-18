@@ -33,6 +33,10 @@ class WispWebSocket extends EventTarget {
     this.init_connection();
   }
 
+  on_conn_close() {
+    delete _wisp_connections[this.real_url];
+  }
+
   init_connection() {
     //create the stream
     this.connection = _wisp_connections[this.real_url];
@@ -42,6 +46,8 @@ class WispWebSocket extends EventTarget {
       this.connection.addEventListener("open", () => {
         this.init_stream();
       })
+      this.connection.addEventListener("close", () => {this.on_conn_close()});
+      this.connection.addEventListener("error", () => {this.on_conn_close()});
       _wisp_connections[this.real_url] = this.connection;
     }
     else if (!this.connection.connected) {
@@ -112,7 +118,7 @@ class WispWebSocket extends EventTarget {
     else {
       throw "invalid data type to be sent";
     }
-    
+
     if (!this.stream) {
       throw "websocket is not ready";
     }
@@ -140,6 +146,9 @@ class WispWebSocket extends EventTarget {
   }
 
   get readyState() {
+    if (this.connection && !this.connection.connected && !this.connection.connecting) {
+      return this.CLOSED;
+    }
     if (!this.connection || !this.connection.connected) {
       return this.CONNECTING;
     }

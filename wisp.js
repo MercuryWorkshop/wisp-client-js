@@ -89,6 +89,7 @@ class WispConnection extends EventTarget {
     this.max_buffer_size = null;
     this.active_streams = {};
     this.connected = false;
+    this.connecting = false;
     this.next_stream_id = 1;
 
     if (!this.wisp_url.endsWith("/")) {
@@ -101,26 +102,49 @@ class WispConnection extends EventTarget {
   connect_ws() {
     this.ws = new WebSocket(this.wisp_url, [protocol_string]);
     this.ws.binaryType = "arraybuffer";
-    let first_message = true;
+    this.connecting = true;
+
     this.ws.addEventListener("error", (event) => {
+      this.on_ws_close();
       let error_event = new Event("error");
       this.dispatchEvent(error_event);
     });
+    this.ws.addEventListener("close", () => {
+      this.on_ws_close();
+      let close_event = new CloseEvent("close");
+      this.dispatchEvent(close_event);
+    });
     this.ws.addEventListener("message", (event) => {
       this.on_ws_msg(event);
-      if (first_message) {
+      if (this.connecting) {
         this.connected = true;
+        this.connecting = false;
         let open_event = new Event("open");
         this.dispatchEvent(open_event);
-        first_message = false;
       }
     });
+  }
+
+  close_stream(stream, reason) {
+    let close_event = new CloseEvent("close", {code: reason});
+    stream.open = false;
+    stream.dispatchEvent(close_event);
+    delete this.active_streams[stream.stream_id];
+  }
+
+  on_ws_close() {
+    this.connected = false;
+    this.connecting = false;
+    for (let stream_id of Object.keys(this.active_streams)) {
+      this.close_stream(this.active_streams[stream_id], 0x03);
+    }
   }
 
   create_stream(hostname, port) {
     let stream_id = this.next_stream_id
     this.next_stream_id ++;
     let stream = new WispStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this);
+    stream.open = this.connected;
 
     //construct CONNECT packet
     let type_array = array_from_uint(0x01, 1);
@@ -156,10 +180,7 @@ class WispConnection extends EventTarget {
 
     else if (packet_type === 0x04) { //CLOSE packets
       if (!stream) return;
-      let close_event = new CloseEvent("close", {code: payload[0]});
-      stream.open = false;
-      stream.dispatchEvent(close_event);
-      delete this.active_streams[stream];
+      this.close_stream(stream, payload[0]);
     }
   }
 }
