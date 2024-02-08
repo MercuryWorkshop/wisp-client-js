@@ -172,7 +172,7 @@ class WispConnection extends EventTarget {
     }
  
     else if (packet_type === 0x03 && stream_id == 0) { //initial CONTINUE packet
-      this.max_buffer_size = payload[0];
+      this.max_buffer_size = uint_from_array(payload);
     }
     
     else if (packet_type === 0x03) { //other CONTINUE packets
