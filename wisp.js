@@ -56,7 +56,7 @@ class WispStream extends EventTarget {
       //construct and send a DATA packet
       let packet = create_packet(0x02, this.stream_id, data);
       this.ws.send(packet);
-      this.buffer_size--;  
+      this.buffer_size--;
     }
     else { //server is slow, don't send data yet
       this.send_buffer.push(data);
@@ -73,7 +73,7 @@ class WispStream extends EventTarget {
   }
 
   //construct and send a CLOSE packet
-  close(reason=0x01) {
+  close(reason = 0x01) {
     if (!this.open) return;
     let payload = array_from_uint(reason, 1)
     let packet = create_packet(0x04, this.stream_id, payload);
@@ -83,7 +83,7 @@ class WispStream extends EventTarget {
   }
 }
 
-class WispConnection extends EventTarget {
+export class WispConnection extends EventTarget {
   constructor(wisp_url) {
     super();
     this.wisp_url = wisp_url;
@@ -127,7 +127,7 @@ class WispConnection extends EventTarget {
   }
 
   close_stream(stream, reason) {
-    let close_event = new CloseEvent("close", {code: reason});
+    let close_event = new CloseEvent("close", { code: reason });
     stream.open = false;
     stream.dispatchEvent(close_event);
     delete this.active_streams[stream.stream_id];
@@ -143,7 +143,7 @@ class WispConnection extends EventTarget {
 
   create_stream(hostname, port) {
     let stream_id = this.next_stream_id
-    this.next_stream_id ++;
+    this.next_stream_id++;
     let stream = new WispStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this);
     stream.open = this.connected;
 
@@ -153,7 +153,7 @@ class WispConnection extends EventTarget {
     let host_array = new TextEncoder().encode(hostname);
     let payload = concat_uint8array(type_array, port_array, host_array);
     let packet = create_packet(0x01, stream_id, payload);
-    
+
     this.active_streams[stream_id] = stream;
     this.ws.send(packet);
     return stream;
@@ -167,14 +167,14 @@ class WispConnection extends EventTarget {
     let stream = this.active_streams[stream_id];
 
     if (packet_type === 0x02) { //DATA packets
-      let msg_event = new MessageEvent("message", {data: payload});
+      let msg_event = new MessageEvent("message", { data: payload });
       stream.dispatchEvent(msg_event);
     }
- 
+
     else if (packet_type === 0x03 && stream_id == 0) { //initial CONTINUE packet
       this.max_buffer_size = uint_from_array(payload);
     }
-    
+
     else if (packet_type === 0x03) { //other CONTINUE packets
       stream.continue_received(uint_from_array(payload));
     }
@@ -185,3 +185,4 @@ class WispConnection extends EventTarget {
     }
   }
 }
+
