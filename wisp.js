@@ -38,7 +38,7 @@ function create_packet(packet_type, stream_id, payload) {
   return packet;
 }
 
-class WispStream extends EventTarget {
+export class WispStream extends EventTarget {
   constructor(hostname, port, websocket, buffer_size, stream_id, connection) {
     super();
     this.hostname = hostname;
