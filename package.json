@@ -1,5 +1,5 @@
 {
-  "name": "wisp-client-js",
+  "name": "@mercuryworkshop/wisp-client-js",
   "version": "1.0.0",
   "description": "A Wisp client implementation, written in Javascript for the use on the web. ",
   "repository": {
@@ -11,5 +11,9 @@
   "bugs": {
     "url": "https://github.com/MercuryWorkshop/wisp-client-js/issues"
   },
-  "homepage": "https://github.com/MercuryWorkshop/wisp-client-js#readme"
+  "homepage": "https://github.com/MercuryWorkshop/wisp-client-js#readme",
+  "main": "wisp.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
 }
