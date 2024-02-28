@@ -106,19 +106,19 @@ class WispWebSocket extends EventTarget {
       if (ArrayBuffer.isView(data) && data instanceof DataView) {
         data_array = new Uint8Array(data.buffer);
       }
-      //regular typed arrays
-      else if (ArrayBuffer.isView(data)) {
-        data_array = Uint8Array.from(data);
-      }
       //regular arraybuffers
       else {
         data_array = new Uint8Array(data);
       }
     }
-    else {
-      throw "invalid data type to be sent";
+    //regular typed arrays
+    else if (ArrayBuffer.isView(data)) {
+      data_array = Uint8Array.from(data);
     }
-
+    else {
+      throw "invalid data type";
+    }
+    
     if (!this.stream) {
       throw "websocket is not ready";
     }

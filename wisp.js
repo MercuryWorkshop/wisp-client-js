@@ -1,5 +1,3 @@
-const protocol_string = "wisp-v1"
-
 function uint_from_array(array) {
   if (array.length == 4) return new Uint32Array(array.buffer)[0];
   else if (array.length == 2) return new Uint16Array(array.buffer)[0];
@@ -100,7 +98,7 @@ class WispConnection extends EventTarget {
   }
 
   connect_ws() {
-    this.ws = new WebSocket(this.wisp_url, [protocol_string]);
+    this.ws = new WebSocket(this.wisp_url);
     this.ws.binaryType = "arraybuffer";
     this.connecting = true;
 
