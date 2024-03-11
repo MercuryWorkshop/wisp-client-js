@@ -1,3 +1,14 @@
+//mapping of packet names to packet types
+export const packet_types = {
+  CONNECT: 0x01,
+  DATA: 0x02,
+  CONTINUE: 0x03,
+  CLOSE: 0x04
+}
+
+//mapping of types to packet names
+export const packet_names = [undefined, "CONNECT", "DATA", "CONTINUE", "CLOSE"];
+
 function uint_from_array(array) {
   if (array.length == 4) return new Uint32Array(array.buffer)[0];
   else if (array.length == 2) return new Uint16Array(array.buffer)[0];
@@ -159,27 +170,42 @@ class WispConnection extends EventTarget {
 
   on_ws_msg(event) {
     let packet = new Uint8Array(event.data);
+
+    if (packet.length < 5) {
+      console.warn(`wisp client warning: received a packet which is too short`);
+      return;
+    }
+
     let packet_type = packet[0];
     let stream_id = uint_from_array(packet.slice(1, 5));
     let payload = packet.slice(5);
     let stream = this.active_streams[stream_id];
 
-    if (packet_type === 0x02) { //DATA packets
+    if (typeof stream === "undefined" && stream_id !== 0) {
+      console.warn(`wisp client warning: received a ${packet_names[packet_type]} packet for a stream which doesn't exist`);
+      return;
+    }
+
+    if (packet_type === packet_types.DATA) { //DATA packets
       let msg_event = new MessageEvent("message", { data: payload });
       stream.dispatchEvent(msg_event);
     }
 
-    else if (packet_type === 0x03 && stream_id == 0) { //initial CONTINUE packet
+    else if (packet_type === packet_types.CONTINUE && stream_id == 0) { //initial CONTINUE packet
       this.max_buffer_size = uint_from_array(payload);
     }
 
-    else if (packet_type === 0x03) { //other CONTINUE packets
+    else if (packet_type === packet_types.CONTINUE) { //other CONTINUE packets
       stream.continue_received(uint_from_array(payload));
     }
 
-    else if (packet_type === 0x04) { //CLOSE packets
+    else if (packet_type === packet_types.CLOSE) { //CLOSE packets
       if (!stream) return;
       this.close_stream(stream, payload[0]);
+    }
+
+    else {
+      console.warn(`wisp client warning: receive an invalid packet of type ${packet_type}`);
     }
   }
 }

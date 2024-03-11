@@ -1,8 +1,10 @@
+import { WispConnection } from "./wisp.js";
+
 //polyfill the DOM Websocket API so that applications using wsproxy can easily use wisp with minimal changes
 
 const _wisp_connections = {};
 
-class WispWebSocket extends EventTarget {
+export class WispWebSocket extends EventTarget {
   constructor(url, protocols) {
     super();
     this.url = url;

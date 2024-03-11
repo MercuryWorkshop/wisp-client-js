@@ -3,10 +3,9 @@
   <head>
     <link rel="icon" href="data:;base64,=">
 
-    <script src="./wisp.js"></script>
-    <script src="./polyfill.js"></script>
-
-    <script>
+    <script type="module">
+      import {WispWebSocket} from "./polyfill.js";
+      
       let ws_url = `wss://${location.hostname}/ws/`
       let ws = new WispWebSocket(ws_url+"alicesworld.tech:80");
       ws.binaryType = "arraybuffer";
