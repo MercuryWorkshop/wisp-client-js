@@ -1,6 +1,8 @@
-# JavaScript Wisp Client
+# JavaScript Wisp Client (libcurl.js branch)
 
 This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client, written in Javascript for use on the Web.
+
+This branch removes any ES6 module features and redirects the output to the libcurl.js logging functions.
 
 ## Javascript API:
 

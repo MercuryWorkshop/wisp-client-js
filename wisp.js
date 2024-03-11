@@ -1,5 +1,5 @@
 //mapping of packet names to packet types
-export const packet_types = {
+const packet_types = {
   CONNECT: 0x01,
   DATA: 0x02,
   CONTINUE: 0x03,
@@ -7,7 +7,7 @@ export const packet_types = {
 }
 
 //mapping of types to packet names
-export const packet_names = [undefined, "CONNECT", "DATA", "CONTINUE", "CLOSE"];
+const packet_names = [undefined, "CONNECT", "DATA", "CONTINUE", "CLOSE"];
 
 function uint_from_array(array) {
   if (array.length == 4) return new Uint32Array(array.buffer)[0];
@@ -172,7 +172,7 @@ class WispConnection extends EventTarget {
     let packet = new Uint8Array(event.data);
 
     if (packet.length < 5) {
-      console.warn(`wisp client warning: received a packet which is too short`);
+      warn_msg(`wisp client warning: received a packet which is too short`);
       return;
     }
 
@@ -182,7 +182,7 @@ class WispConnection extends EventTarget {
     let stream = this.active_streams[stream_id];
 
     if (typeof stream === "undefined" && stream_id !== 0) {
-      console.warn(`wisp client warning: received a ${packet_names[packet_type]} packet for a stream which doesn't exist`);
+      warn_msg(`wisp client warning: received a ${packet_names[packet_type]} packet for a stream which doesn't exist`);
       return;
     }
 
@@ -205,7 +205,7 @@ class WispConnection extends EventTarget {
     }
 
     else {
-      console.warn(`wisp client warning: receive an invalid packet of type ${packet_type}`);
+      warn_msg(`wisp client warning: receive an invalid packet of type ${packet_type}`);
     }
   }
 }
