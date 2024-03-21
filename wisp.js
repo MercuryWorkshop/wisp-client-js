@@ -47,8 +47,8 @@ function create_packet(packet_type, stream_id, payload) {
   return packet;
 }
 
-export class WispStream extends EventTarget {
-  constructor(hostname, port, websocket, buffer_size, stream_id, connection) {
+class WispStream extends EventTarget {
+  constructor(hostname, port, websocket, buffer_size, stream_id, connection, stream_type) {
     super();
     this.hostname = hostname;
     this.port = port;
@@ -56,12 +56,14 @@ export class WispStream extends EventTarget {
     this.buffer_size = buffer_size;
     this.stream_id = stream_id;
     this.connection = connection;
+    this.stream_type = stream_type;
     this.send_buffer = [];
     this.open = true;
   }
 
   send(data) {
-    if (this.buffer_size > 0 || !this.open) {
+    //note: udp shouldn't buffer anything
+    if (this.buffer_size > 0 || !this.open || this.stream_type === 0x02) {
       //construct and send a DATA packet
       let packet = create_packet(0x02, this.stream_id, data);
       this.ws.send(packet);
@@ -150,14 +152,15 @@ export class WispConnection extends EventTarget {
     }
   }
 
-  create_stream(hostname, port) {
+  create_stream(hostname, port, type="tcp") {
+    let stream_type = type === "udp" ? 0x02 : 0x01;
     let stream_id = this.next_stream_id
     this.next_stream_id++;
-    let stream = new WispStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this);
+    let stream = new WispStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this, stream_type);
     stream.open = this.connected;
 
     //construct CONNECT packet
-    let type_array = array_from_uint(0x01, 1);
+    let type_array = array_from_uint(stream_type, 1);
     let port_array = array_from_uint(port, 2);
     let host_array = new TextEncoder().encode(hostname);
     let payload = concat_uint8array(type_array, port_array, host_array);
@@ -200,7 +203,6 @@ export class WispConnection extends EventTarget {
     }
 
     else if (packet_type === packet_types.CLOSE) { //CLOSE packets
-      if (!stream) return;
       this.close_stream(stream, payload[0]);
     }
 

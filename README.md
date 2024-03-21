@@ -17,7 +17,7 @@ conn.addEventListener("open", () => {
 ```
 
 ### Creating New Streams:
-Once you have your `WispConnection` object, and you have waited for the connection to be established, you can use the `WispConnection.create_stream` method to create new streams. The two arguments to this function are the hostname and port of the new stream, and a `WispStream` object will be returned. 
+Once you have your `WispConnection` object, and you have waited for the connection to be established, you can use the `WispConnection.create_stream` method to create new streams. The two arguments to this function are the hostname and port of the new stream, and a `WispStream` object will be returned. You can also pass a third argument to `create_stream`, which is the type of the stream, and it can be either `"tcp"` (the default) or `"udp"`.
 
 For receiving incoming messages, use the `message` event on the `WispStream` object. The returned data will always be a `Uint8Array`. The `close` and `error` events can be used to know when the stream is closed. 
 
