@@ -1,14 +1,5 @@
 export { WispWebSocket } from "./polyfill.mjs";
-
-//don't import the ws library if we're on the browser
-let RealWS;
-if (typeof process !== "undefined") {
-  let ws = await import("ws");
-  RealWS = ws.WebSocket;
-}
-else {
-  RealWS = globalThis.WebSocket;
-}
+import { RealCloseEvent, RealWS } from "./compat.mjs";
 
 //mapping of packet names to packet types
 export const packet_types = {
@@ -139,7 +130,7 @@ export class WispConnection extends EventTarget {
     };
     this.ws.onclose = () => {
       this.on_ws_close();
-      let event = new (globalThis.CloseEvent || Event)("close");
+      let event = new RealCloseEvent("close");
       this.dispatchEvent(event);
     };
     this.ws.onmessage = (event) => {
@@ -153,7 +144,7 @@ export class WispConnection extends EventTarget {
   }
 
   close_stream(stream, reason) {
-    let close_event = new (globalThis.CloseEvent || Event)("close", { code: reason });
+    let close_event = new RealCloseEvent("close", { code: reason });
     stream.open = false;
     stream.dispatchEvent(close_event);
     delete this.active_streams[stream.stream_id];

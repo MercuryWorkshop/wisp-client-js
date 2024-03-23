@@ -1,4 +1,5 @@
 import { WispConnection } from "./wisp.mjs";
+import { RealCloseEvent } from "./compat.mjs";
 
 //polyfill the DOM Websocket API so that applications using wsproxy can easily use wisp with minimal changes
 
@@ -86,7 +87,7 @@ export class WispWebSocket extends EventTarget {
       this.dispatchEvent(msg_event);
     });
     this.stream.addEventListener("close", (event) => {
-      let close_event = new (globalThis.CloseEvent || Event)("close", {code: event.code}); 
+      let close_event = new RealCloseEvent("close", {code: event.code}); 
       this.onclose(close_event);
       this.dispatchEvent(close_event);
     })
