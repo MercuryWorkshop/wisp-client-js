@@ -1,8 +1,8 @@
-import { WispConnection } from "./wisp.js";
+import { WispConnection } from "./wisp.mjs";
 
 //polyfill the DOM Websocket API so that applications using wsproxy can easily use wisp with minimal changes
 
-const _wisp_connections = {};
+export const _wisp_connections = {};
 
 export class WispWebSocket extends EventTarget {
   constructor(url, protocols) {
@@ -36,6 +36,9 @@ export class WispWebSocket extends EventTarget {
   }
 
   on_conn_close() {
+    if (_wisp_connections[this.real_url]) {
+      this.dispatchEvent(new Event("error"));
+    }
     delete _wisp_connections[this.real_url];
   }
 
@@ -49,7 +52,9 @@ export class WispWebSocket extends EventTarget {
         this.init_stream();
       })
       this.connection.addEventListener("close", () => {this.on_conn_close()});
-      this.connection.addEventListener("error", () => {this.on_conn_close()});
+      this.connection.addEventListener("error", (event) => {
+        this.on_conn_close()
+      });
       _wisp_connections[this.real_url] = this.connection;
     }
     else if (!this.connection.connected) {
@@ -81,7 +86,7 @@ export class WispWebSocket extends EventTarget {
       this.dispatchEvent(msg_event);
     });
     this.stream.addEventListener("close", (event) => {
-      let close_event = new CloseEvent("close", {code: event.code});
+      let close_event = new (globalThis.CloseEvent || Event)("close", {code: event.code}); 
       this.onclose(close_event);
       this.dispatchEvent(close_event);
     })

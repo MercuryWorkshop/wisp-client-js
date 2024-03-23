@@ -5,7 +5,7 @@ This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-pr
 ## Javascript API:
 
 ### Importing the Library:
-To use this library, clone this repository and link to `wisp.js` via a script tag. If you want to use the WebSocket API polyfill, then you can also link the `polyfill.js` file.
+To use this library on either NodeJS or the browser, import the `wisp.mjs` file. Alternatively, use the `dist/wisp.js` file in the NPM package if you don't want to use an ES6 module.
 
 ### Connecting to a Wisp Server:
 You can create a new Wisp connection by creating a new `WispConnection` object. The only argument to the constructor is the URL of the Wisp websocket server. Use the `open` event to know when the Wisp connection is ready.

@@ -1,6 +1,6 @@
 {
   "name": "@mercuryworkshop/wisp-client-js",
-  "version": "1.1.0",
+  "version": "1.2.1",
   "description": "A Wisp client implementation, written in Javascript for the use on the web. ",
   "repository": {
     "type": "git",
@@ -12,8 +12,14 @@
     "url": "https://github.com/MercuryWorkshop/wisp-client-js/issues"
   },
   "homepage": "https://github.com/MercuryWorkshop/wisp-client-js#readme",
-  "main": "wisp.js",
+  "main": "./src/wisp.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "mkdir -p dist; esbuild --bundle --external:ws --platform=neutral src/wisp.mjs | head -n -6 > dist/wisp.js"
+  },
+  "dependencies": {
+    "ws": "^8.16.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.2"
   }
 }

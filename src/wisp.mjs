@@ -1,3 +1,15 @@
+export { WispWebSocket } from "./polyfill.mjs";
+
+//don't import the ws library if we're on the browser
+let RealWS;
+if (typeof process !== "undefined") {
+  let ws = await import("ws");
+  RealWS = ws.WebSocket;
+}
+else {
+  RealWS = globalThis.WebSocket;
+}
+
 //mapping of packet names to packet types
 export const packet_types = {
   CONNECT: 0x01,
@@ -59,6 +71,11 @@ class WispStream extends EventTarget {
     this.stream_type = stream_type;
     this.send_buffer = [];
     this.open = true;
+
+    this.onopen = () => {};
+    this.onclose = () => {};
+    this.onerror = () => {};
+    this.onmessage = () => {};
   }
 
   send(data) {
@@ -112,33 +129,31 @@ export class WispConnection extends EventTarget {
   }
 
   connect_ws() {
-    this.ws = new WebSocket(this.wisp_url);
+    this.ws = new RealWS(this.wisp_url);
     this.ws.binaryType = "arraybuffer";
     this.connecting = true;
 
-    this.ws.addEventListener("error", (event) => {
+    this.ws.onerror = () => {
       this.on_ws_close();
-      let error_event = new Event("error");
-      this.dispatchEvent(error_event);
-    });
-    this.ws.addEventListener("close", () => {
+      this.dispatchEvent(new Event("error"));
+    };
+    this.ws.onclose = () => {
       this.on_ws_close();
-      let close_event = new CloseEvent("close");
-      this.dispatchEvent(close_event);
-    });
-    this.ws.addEventListener("message", (event) => {
+      let event = new (globalThis.CloseEvent || Event)("close");
+      this.dispatchEvent(event);
+    };
+    this.ws.onmessage = (event) => {
       this.on_ws_msg(event);
       if (this.connecting) {
         this.connected = true;
         this.connecting = false;
-        let open_event = new Event("open");
-        this.dispatchEvent(open_event);
+        this.dispatchEvent(new Event("open"));
       }
-    });
+    };
   }
 
   close_stream(stream, reason) {
-    let close_event = new CloseEvent("close", { code: reason });
+    let close_event = new (globalThis.CloseEvent || Event)("close", { code: reason });
     stream.open = false;
     stream.dispatchEvent(close_event);
     delete this.active_streams[stream.stream_id];
