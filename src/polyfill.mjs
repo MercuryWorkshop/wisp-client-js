@@ -92,8 +92,8 @@ export class WispWebSocket extends EventTarget {
       this.dispatchEvent(msg_event);
     };
 
-    this.stream.onclose = (event) => {
-      let close_event = new RealCloseEvent("close", {code: event.code}); 
+    this.stream.onclose = (reason) => {
+      let close_event = new RealCloseEvent("close", {code: reason}); 
       this.onclose(close_event);
       this.dispatchEvent(close_event);
     };
@@ -104,37 +104,31 @@ export class WispWebSocket extends EventTarget {
   }
 
   send(data) {
-    //fixme: this logic is completely broken :(
     let data_array;
-    if (typeof data === "string") {
+
+    if (data instanceof Uint8Array) {
+      data_array = data;  
+    }
+    else if (typeof data === "string") {
       data_array = new TextEncoder().encode(data);
     }
     else if (data instanceof Blob) {
       data.arrayBuffer().then(array_buffer => {
-        data_array = new Uint8Array(array_buffer);
-        this.send(data_array);
+        this.send(array_buffer);
       });
       return;
     }
-    //any typedarray
     else if (data instanceof ArrayBuffer) {
-      //dataview objects
-      if (ArrayBuffer.isView(data) && data instanceof DataView) {
-        data_array = new Uint8Array(data.buffer);
-      }
-      //regular arraybuffers
-      else {
-        data_array = new Uint8Array(data);
-      }
+      data_array = new Uint8Array(data);
     }
-    //regular typed arrays
+    //dataview objects or any other typedarray
     else if (ArrayBuffer.isView(data)) {
-      data_array = Uint8Array.from(data);
+      data_array = new Uint8Array(data.buffer);
     }
     else {
-      throw "invalid data type";
+      throw "invalid data type to be sent";
     }
-    
+
     if (!this.stream) {
       throw "websocket is not ready";
     }
