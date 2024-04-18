@@ -1,5 +1,5 @@
-import {WispConnection} from "./src/wisp.mjs";
-import {WispWebSocket, _wisp_connections} from "./src/polyfill.mjs";
+import { client } from "./src/index.mjs";
+const { WispConnection, WispWebSocket, _wisp_connections } = client;
 
 let ws_url = `ws://localhost:5001/ws/`;
 if (typeof process === "undefined") {

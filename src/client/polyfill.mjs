@@ -1,5 +1,5 @@
-import { WispConnection } from "./wisp.mjs";
-import { RealCloseEvent } from "./compat.mjs";
+import { WispConnection } from "./connection.mjs";
+import { RealCloseEvent } from "../compat.mjs";
 
 //polyfill the DOM Websocket API so that applications using wsproxy can easily use wisp with minimal changes
 

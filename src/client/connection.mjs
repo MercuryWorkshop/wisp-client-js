@@ -1,24 +1,13 @@
-export { WispWebSocket } from "./polyfill.mjs";
-import { RealWS } from "./compat.mjs";
-import { //note: i'll make these imports less messy soon
+import { RealWS } from "../compat.mjs";
+import {
+  packet_classes,
+  packet_types,
   WispBuffer, 
   WispPacket, 
   ConnectPayload, 
   DataPayload, 
-  ContinuePayload, 
   ClosePayload
-} from "./packet.mjs";
-
-//mapping of packet names to packet types
-export const packet_types = {
-  CONNECT: 0x01,
-  DATA: 0x02,
-  CONTINUE: 0x03,
-  CLOSE: 0x04
-}
-
-//mapping of types to packet names
-export const packet_names = [undefined, "CONNECT", "DATA", "CONTINUE", "CLOSE"];
+} from "../packet.mjs";
 
 class WispStream {
   constructor(hostname, port, websocket, buffer_size, stream_id, connection, stream_type) {
@@ -169,7 +158,7 @@ export class WispConnection {
     let stream = this.active_streams[packet.stream_id];
 
     if (typeof stream === "undefined" && packet.stream_id !== 0) {
-      console.warn(`wisp client warning: received a ${packet_names[packet.type]} packet for a stream which doesn't exist`);
+      console.warn(`wisp client warning: received a ${packet_classes[packet.type].name} packet for a stream which doesn't exist`);
       return;
     }
 

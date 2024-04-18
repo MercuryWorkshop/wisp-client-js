@@ -60,13 +60,14 @@ export class WispPacket {
       throw "packet too small";
     }
     let packet = WispPacket.parse(buffer);
-    for (let payload_class of [ConnectPayload, DataPayload, ContinuePayload, ClosePayload]) {
-      if (packet.type !== payload_class.type) continue;
-      if (packet.payload_bytes.size < payload_class.size) {
-        throw "payload too small";
-      }
-      packet.payload = payload_class.parse(packet.payload_bytes);
+    let payload_class = packet_classes[packet.type];
+    if (typeof payload_class === "undefined") {
+      throw "invalid packet type";
     }
+    if (packet.payload_bytes.size < payload_class.size) {
+      throw "payload too small";
+    }
+    packet.payload = payload_class.parse(packet.payload_bytes);
     return packet;
   }
   serialize() {
@@ -81,6 +82,7 @@ export class WispPacket {
 export class ConnectPayload {
   static min_size = 3;
   static type = 0x01;
+  static name = "CONNECT";
   constructor(params) {
     this.stream_type = params.stream_type;
     this.port = params.port;
@@ -105,6 +107,7 @@ export class ConnectPayload {
 export class DataPayload {
   static min_size = 0;
   static type = 0x02;
+  static name = "DATA";
   constructor(params) {
     this.data = params.data;
   }
@@ -119,8 +122,8 @@ export class DataPayload {
 }
 
 export class ContinuePayload {
-  static min_size = 4;
   static type = 0x03;
+  static name = "CONTINUE";
   constructor(params) {
     this.buffer_remaining = params.buffer_remaining;
   }
@@ -139,6 +142,7 @@ export class ContinuePayload {
 export class ClosePayload {
   static min_size = 1;
   static type = 0x04;
+  static name = "CLOSE";
   constructor(params) {
     this.reason = params.reason;
   }
@@ -152,4 +156,19 @@ export class ClosePayload {
     buffer.view.setUint8(0, this.buffer_remaining);
     return buffer;
   }
+}
+
+export const packet_classes = [
+  undefined,
+  ConnectPayload, 
+  DataPayload, 
+  ContinuePayload, 
+  ClosePayload
+]
+
+export const packet_types = {
+  CONNECT: 0x01,
+  DATA: 0x02,
+  CONTINUE: 0x03,
+  CLOSE: 0x04
 }

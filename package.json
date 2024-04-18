@@ -12,13 +12,17 @@
     "url": "https://github.com/MercuryWorkshop/wisp-client-js/issues"
   },
   "homepage": "https://github.com/MercuryWorkshop/wisp-client-js#readme",
-  "main": "./src/wisp.mjs",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./client": "./client.mjs"
+  },
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "build": "mkdir -p dist; esbuild --bundle --external:ws --platform=neutral src/wisp.mjs | head -n -6 > dist/wisp.js"
+    "build": "mkdir -p dist; esbuild --bundle --external:ws --platform=neutral src/entrypoints/client.mjs | head -n -4 > dist/wisp.js"
   },
   "dependencies": {
     "ws": "^8.16.0"
