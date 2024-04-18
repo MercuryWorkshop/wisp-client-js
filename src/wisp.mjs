@@ -1,5 +1,5 @@
 export { WispWebSocket } from "./polyfill.mjs";
-import { RealCloseEvent, RealWS } from "./compat.mjs";
+import { RealWS } from "./compat.mjs";
 
 //mapping of packet names to packet types
 export const packet_types = {
@@ -50,9 +50,8 @@ function create_packet(packet_type, stream_id, payload) {
   return packet;
 }
 
-class WispStream extends EventTarget {
+class WispStream {
   constructor(hostname, port, websocket, buffer_size, stream_id, connection, stream_type) {
-    super();
     this.hostname = hostname;
     this.port = port;
     this.ws = websocket;
@@ -65,7 +64,6 @@ class WispStream extends EventTarget {
 
     this.onopen = () => {};
     this.onclose = () => {};
-    this.onerror = () => {};
     this.onmessage = () => {};
   }
 
@@ -102,9 +100,12 @@ class WispStream extends EventTarget {
   }
 }
 
-export class WispConnection extends EventTarget {
+export class WispConnection {
   constructor(wisp_url) {
-    super();
+    if (!wisp_url.endsWith("/")) {
+      throw "wisp endpoints must end with a trailing forward slash";
+    }
+
     this.wisp_url = wisp_url;
     this.max_buffer_size = null;
     this.active_streams = {};
@@ -112,9 +113,10 @@ export class WispConnection extends EventTarget {
     this.connecting = false;
     this.next_stream_id = 1;
 
-    if (!this.wisp_url.endsWith("/")) {
-      throw "wisp endpoints must end with a trailing forward slash";
-    }
+    this.onopen = () => {};
+    this.onclose = () => {};
+    this.onerror = () => {};
+    this.onmessage = () => {};
 
     this.connect_ws();
   }
@@ -126,27 +128,24 @@ export class WispConnection extends EventTarget {
 
     this.ws.onerror = () => {
       this.on_ws_close();
-      this.dispatchEvent(new Event("error"));
+      this.onerror();
     };
     this.ws.onclose = () => {
       this.on_ws_close();
-      let event = new RealCloseEvent("close");
-      this.dispatchEvent(event);
+      this.onclose();
     };
     this.ws.onmessage = (event) => {
       this.on_ws_msg(event);
       if (this.connecting) {
         this.connected = true;
         this.connecting = false;
-        this.dispatchEvent(new Event("open"));
+        this.onopen();
       }
     };
   }
 
   close_stream(stream, reason) {
-    let close_event = new RealCloseEvent("close", { code: reason });
-    stream.open = false;
-    stream.dispatchEvent(close_event);
+    stream.onclose(reason);
     delete this.active_streams[stream.stream_id];
   }
 
@@ -173,7 +172,7 @@ export class WispConnection extends EventTarget {
     let packet = create_packet(0x01, stream_id, payload);
 
     this.active_streams[stream_id] = stream;
-    this.ws.send(packet);
+    this.ws.send(packet.buffer);
     return stream;
   }
 
@@ -196,8 +195,7 @@ export class WispConnection extends EventTarget {
     }
 
     if (packet_type === packet_types.DATA) { //DATA packets
-      let msg_event = new MessageEvent("message", { data: payload });
-      stream.dispatchEvent(msg_event);
+      stream.onmessage(payload);
     }
 
     else if (packet_type === packet_types.CONTINUE && stream_id == 0) { //initial CONTINUE packet

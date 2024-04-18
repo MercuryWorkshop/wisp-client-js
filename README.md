@@ -11,26 +11,32 @@ To use this library on either NodeJS or the browser, import the `wisp.mjs` file.
 You can create a new Wisp connection by creating a new `WispConnection` object. The only argument to the constructor is the URL of the Wisp websocket server. Use the `open` event to know when the Wisp connection is ready.
 ```js
 let conn = new WispConnection("wss://example.com/wisp/");
-conn.addEventListener("open", () => {
+conn.onopen = () => {
   console.log("wisp connection is ready!");
-});
+};
+conn.onclose = () => {
+  console.log("wisp connection closed");
+};
+conn.onerror = () => {
+  console.log("wisp connection error");
+};
 ```
 
 ### Creating New Streams:
 Once you have your `WispConnection` object, and you have waited for the connection to be established, you can use the `WispConnection.create_stream` method to create new streams. The two arguments to this function are the hostname and port of the new stream, and a `WispStream` object will be returned. You can also pass a third argument to `create_stream`, which is the type of the stream, and it can be either `"tcp"` (the default) or `"udp"`.
 
-For receiving incoming messages, use the `message` event on the `WispStream` object. The returned data will always be a `Uint8Array`. The `close` and `error` events can be used to know when the stream is closed. 
+For receiving incoming messages, use the `onmessage` callback on the `WispStream` object. The returned data will always be a `Uint8Array`. The `onclose` callback can be used to know when the stream is closed. 
 
 You can use `stream.send` to send data to the stream, and it must take a `Uint8Array` as the argument. Newly created streams are available for writing immediately, so you don't have to worry about waiting to send your data.
 ```js
 let stream = conn.create_stream("www.google.com", 80);
-stream.addEventListener("message", (event) => {
-  let text = new TextDecoder().decode(event.data);
+stream.onmessage = (data) => {
+  let text = new TextDecoder().decode(data);
   console.log(text);
-});
-stream.addEventListener("close", (event) => {
-  console.log("stream closed for reason: " + event.code);
-});
+};
+stream.onclose = (reason) => {
+  console.log("stream closed for reason: " + reason);
+};
 
 let payload = "GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
 stream.send(new TextEncoder().encode(payload));

@@ -49,19 +49,23 @@ export class WispWebSocket extends EventTarget {
 
     if (!this.connection) {
       this.connection = new WispConnection(this.real_url);
-      this.connection.addEventListener("open", () => {
+      this.connection.onopen = () => {
         this.init_stream();
-      })
-      this.connection.addEventListener("close", () => {this.on_conn_close()});
-      this.connection.addEventListener("error", (event) => {
+      };
+      this.connection.onclose = () => {
         this.on_conn_close()
-      });
+      };
+      this.connection.onerror = () => {
+        this.on_conn_close()
+      };
       _wisp_connections[this.real_url] = this.connection;
     }
     else if (!this.connection.connected) {
-      this.connection.addEventListener("open", () => {
+      let old_onopen = this.connection.onopen;
+      this.connection.onopen = () => {
+        old_onopen();
         this.init_stream();
-      });
+      };
     }
     else {
       this.connection = _wisp_connections[this.real_url];
@@ -71,13 +75,14 @@ export class WispWebSocket extends EventTarget {
 
   init_stream() {
     this.stream = this.connection.create_stream(this.host, this.port);
-    this.stream.addEventListener("message", (event) => {
+
+    this.stream.onmessage = (raw_data) => {
       let data;
       if (this.binaryType == "blob") {
-        data = new Blob(event.data);
+        data = new Blob(raw_data);
       }
       else if (this.binaryType == "arraybuffer") {
-        data = event.data.buffer;
+        data = raw_data.buffer;
       }
       else {
         throw "invalid binaryType string";
@@ -85,18 +90,21 @@ export class WispWebSocket extends EventTarget {
       let msg_event = new MessageEvent("message", {data: data});
       this.onmessage(msg_event);
       this.dispatchEvent(msg_event);
-    });
-    this.stream.addEventListener("close", (event) => {
+    };
+
+    this.stream.onclose = (event) => {
       let close_event = new RealCloseEvent("close", {code: event.code}); 
       this.onclose(close_event);
       this.dispatchEvent(close_event);
-    })
+    };
+
     let open_event = new Event("open");
     this.onopen(open_event);
     this.dispatchEvent(open_event);
   }
 
   send(data) {
+    //fixme: this logic is completely broken :(
     let data_array;
     if (typeof data === "string") {
       data_array = new TextEncoder().encode(data);
