@@ -9,6 +9,8 @@ if (typeof process !== "undefined") {
 }
 
 export class AsyncWebSocket {
+  send_buffer_size = 1024 ** 3;
+  
   constructor(ws) {
     this.ws = ws;
     this.connected = false;
@@ -43,5 +45,20 @@ export class AsyncWebSocket {
       throw "unknown websocket error";
     }
     return data;
+  }
+
+  async send(data) {
+    this.ws.send(data);
+    if (this.ws.bufferedAmount <= this.send_buffer_size) {
+      return;
+    }
+
+    //if the send buffer is too full, throttle the upload
+    while (true) {
+      if (this.ws.bufferedAmount <= this.send_buffer_size / 2) {
+        break;
+      }
+      await new Promise((resolve) => {setTimeout(resolve, 10)});
+    }
   }
 }
