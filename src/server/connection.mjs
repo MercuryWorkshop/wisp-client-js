@@ -1,3 +1,4 @@
+import * as logging from "../logging.mjs";
 import { AsyncQueue, AsyncWebSocket } from "../websocket.mjs";
 import { NodeTCPSocket, NodeUDPSocket } from "./net.mjs";
 import { 
@@ -26,11 +27,11 @@ export class WispStream {
 
     //start the proxy tasks in the background
     this.tcp_to_ws().catch((error) => {
-      console.warn(`warning: a tcp/udp to ws task encountered an error - ${error}`);
+      logging.warn(`a tcp/udp to ws task encountered an error - ${error}`);
       this.close();
     });
     this.ws_to_tcp().catch((error) => {
-      console.warn(`warning: a ws to tcp/udp task encountered an error - ${error}`);
+      logging.warn(`a ws to tcp/udp task encountered an error - ${error}`);
       this.close();
     });
   }
@@ -130,7 +131,7 @@ export class WispConnection {
 
     //start connecting to the destination server in the background
     stream.setup().catch((error) => {
-      console.warn(`warning: creating a stream to ${hostname}:${port} failed - ${error}`);
+      logging.warn(`creating a stream to ${hostname}:${port} failed - ${error}`);
       this.close_stream(stream_id, 0x03);
     });
   }
@@ -144,15 +145,13 @@ export class WispConnection {
     let packet = WispPacket.parse_all(buffer);
     let stream = this.streams[packet.stream_id];
 
-    //console.log(packet);
-
     if (stream == null && packet.type == DataPayload.type) {
-      console.warn(`warning: received a ${packet_classes[packet.stream_id].name} packet for a stream which doesn't exist`);
+      logging.warn(`received a ${packet_classes[packet.stream_id].name} packet for a stream which doesn't exist`);
       return;
     }
 
     if (packet.type === ConnectPayload.type) {
-      console.log(`info: opening new stream to ${packet.payload.hostname}:${packet.payload.port}`);
+      logging.info(`opening new stream to ${packet.payload.hostname}:${packet.payload.port}`);
       await this.create_stream(
         packet.stream_id, 
         packet.payload.stream_type, 
@@ -166,7 +165,7 @@ export class WispConnection {
     }
 
     else if (packet.type == ContinuePayload.type) {
-      console.warn(`warning: client sent a CONTINUE packet`);
+      logging.warn(`client sent a CONTINUE packet`);
     }
 
     else if (packet.type == ClosePayload.type) {
@@ -177,22 +176,16 @@ export class WispConnection {
   async run() {
     while (true) {
       let data;
-      try {
-        data = await this.ws.recv();
-      }
-      catch (error) {
-        console.error(`error: wisp websocket connection failed unexpectedly - ${error}`);
-        break; //websocket error 
-      }
+      data = await this.ws.recv();
       if (data == null) {
-        break; //websocket graceful shutdown
+        break; //websocket closed
       }
       
       try {
         this.route_packet(new WispBuffer(new Uint8Array(data)));
       }
       catch (error) {
-        console.warn(`warning: routing a packet failed - ${error}`);
+        logging.warn(`routing a packet failed - ${error}`);
       }
     }
     

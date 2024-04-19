@@ -1,3 +1,4 @@
+import * as logging from "../logging.mjs";
 import { AsyncWebSocket } from "../websocket.mjs";
 import { NodeTCPSocket } from "./net.mjs";
 
@@ -15,10 +16,10 @@ export class WSProxyConnection {
 
     //start the proxy tasks in the background
     this.tcp_to_ws().catch((error) => {
-      console.warn(`warning: a tcp to ws task (wsproxy) encountered an error - ${error}`);
+      logging.warn(`a tcp to ws task (wsproxy) encountered an error - ${error}`);
     });
     this.ws_to_tcp().catch((error) => {
-      console.warn(`warning: a ws to tcp task (wsproxy) encountered an error - ${error}`);
+      logging.warn(`a ws to tcp task (wsproxy) encountered an error - ${error}`);
     });
   }
 
@@ -38,15 +39,9 @@ export class WSProxyConnection {
   async ws_to_tcp() {
     while (true) {
       let data;
-      try {
-        data = await this.ws.recv();
-      }
-      catch (e) {
-        console.error(`error: wsproxy connection failed unexpectedly - ${error}`);
-        break; //websocket error - close the tcp socket
-      }
+      data = await this.ws.recv();
       if (data == null) {
-        break; //websocket graceful shutdown
+        break; //websocket closed
       }
       await this.socket.send(data);
     }

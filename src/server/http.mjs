@@ -1,3 +1,4 @@
+import * as logging from "../logging.mjs";
 import { WispConnection } from "./connection.mjs";
 import { WSProxyConnection } from "./wsproxy.mjs";
 import { is_node, assert_on_node } from "./net.mjs";
@@ -28,7 +29,7 @@ export function routeRequest(request, socket, head) {
 }
 
 async function create_connection(ws, path) {
-  console.log("new connection on " + path);
+  logging.info("new connection on " + path);
   if (path.endsWith("/")) {
     let wisp_conn = new WispConnection(ws, path);
     await wisp_conn.setup();
