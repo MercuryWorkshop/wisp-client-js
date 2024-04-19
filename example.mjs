@@ -1,3 +1,4 @@
+//replace with "@mercuryworkshop/wisp-js/client"
 import { client } from "./src/index.mjs";
 const { WispConnection, WispWebSocket, _wisp_connections } = client;
 
@@ -10,12 +11,12 @@ function run_demo() {
   let ws = new WispWebSocket(ws_url+"alicesworld.tech:80");
   ws.binaryType = "arraybuffer";
   ws.addEventListener("open", () => {
-    let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
+    let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: close\r\n\r\n";
     ws.send(payload);
   });
   ws.addEventListener("message", (event) => {
     let text = new TextDecoder().decode(event.data);
-    console.log("message from stream 1: ", text.slice(0, 128));
+    console.log("message from stream 1: ", text);
   });
   ws.addEventListener("close", () => {
     console.log("stream 1 closed");
@@ -32,7 +33,7 @@ function run_demo() {
   });
   ws2.addEventListener("message", (event) => {
     let text = new TextDecoder().decode(event.data);
-    console.log("message from stream 2: ", text.slice(0, 128));
+    console.log("message from stream 2: ", text);
   });
   ws2.addEventListener("close", () => {
     console.log("stream 2 closed");

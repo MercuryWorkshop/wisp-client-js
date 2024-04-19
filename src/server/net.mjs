@@ -24,7 +24,7 @@ async function lookup_ip(hostname) {
   if (ip_level === 4 || ip_level === 6) {
     return hostname; //hostname is already an ip address
   }
-  return await dns.lookup(hostname);
+  return await dns.lookup(hostname).address;
 }
 
 export class NodeTCPSocket {
@@ -77,6 +77,13 @@ export class NodeTCPSocket {
 
   async close() {
     this.socket.end();
+  }
+
+  pause() {
+    this.socket.pause();
+  }
+  resume() {
+    this.socket.resume();
   }
 }
 

@@ -1,5 +1,5 @@
 {
-  "name": "@mercuryworkshop/wisp-client-js",
+  "name": "@mercuryworkshop/wisp-js",
   "version": "2.0.0-dev",
   "description": "A client and server for the Wisp protocol, written in Javascript",
   "repository": {

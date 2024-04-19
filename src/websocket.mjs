@@ -15,7 +15,7 @@ export class AsyncWebSocket {
   constructor(ws) {
     this.ws = ws;
     this.connected = false;
-    this.data_callback = () => {};
+    this.data_queue = new AsyncQueue(1);
   }
 
   async connect() {
@@ -25,27 +25,20 @@ export class AsyncWebSocket {
         resolve();
       }
       this.ws.onmessage = (event) => {
-        this.data_callback(event.data, false);
+        this.data_queue.put(event.data);
       }
       this.ws.onclose = () => {
         if (!this.connected) reject();
-        else this.data_callback(null, false);
+        else this.data_queue.close();
       }
-      this.ws.onerror = () => {
-        if (!this.connected) reject();
-        else this.data_callback(null, true);
+      if (this.ws.readyState === this.ws.OPEN) {
+        resolve();
       }
-    }) 
+    });
   }
 
   async recv() {
-    let [data, error] = await new Promise((resolve) => {
-      this.data_callback = resolve;
-    });
-    if (error) {
-      throw "unknown websocket error";
-    }
-    return data;
+    return await this.data_queue.get();
   }
 
   async send(data) {
@@ -86,13 +79,15 @@ export class AsyncQueue {
 
   async get() {
     if (this.queue[0]) {
+      this.put_callbacks.shift()?.();
       return this.queue.shift();
     }
 
     //wait until there is an item available in the queue
-    let data = await new Promise((resolve) => {
+    await new Promise((resolve) => {
       this.get_callbacks.push(resolve);
     });
+    let data = this.queue.shift();
     this.put_callbacks.shift()?.();
     return data;
   }
@@ -105,5 +100,9 @@ export class AsyncQueue {
       callback();
     while (callback = this.put_callbacks.shift())
       callback();
+  }
+
+  get size() {
+    return this.queue.size;
   }
 }

@@ -141,7 +141,7 @@ export class WispConnection {
       payload: new ConnectPayload({
         stream_type: stream_type,
         port: port,
-        host: hostname
+        hostname: hostname
       })
     });
     this.ws.send(packet.serialize().bytes);

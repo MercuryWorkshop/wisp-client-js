@@ -17,6 +17,7 @@ export class WispBuffer {
       this.from_array(encode_text(data));
     }
     else {
+      console.trace();
       throw "invalid data type passed to wisp buffer constructor";
     }
   }
@@ -45,8 +46,8 @@ export class WispPacket {
   constructor({type, stream_id, payload, payload_bytes }) {
     this.type = type;
     this.stream_id = stream_id;
-    this.payload_bytes = payload;
-    this.payload = payload_bytes;
+    this.payload_bytes = payload_bytes;
+    this.payload = payload;
   }
   static parse(buffer) {
     return new WispPacket({
@@ -92,7 +93,7 @@ export class ConnectPayload {
     return new ConnectPayload({
       stream_type: buffer.view.getUint8(0),
       port: buffer.view.getUint16(1, true),
-      hostname: decode_text(buffer.slice(3))
+      hostname: decode_text(buffer.slice(3).bytes)
     });
   }
   serialize() {

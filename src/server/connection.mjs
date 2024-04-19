@@ -6,16 +6,19 @@ import {
   ContinuePayload,
   ClosePayload,
   ConnectPayload,
-  DataPayload
+  DataPayload,
+  packet_classes
 } from "../packet.mjs";
 
 export class WispStream {
   static buffer_size = 128;
 
-  constructor(conn, socket) {
+  constructor(stream_id, conn, socket) {
+    this.stream_id = stream_id;
     this.conn = conn;
     this.socket = socket;
     this.send_buffer = new AsyncQueue(WispStream.buffer_size);
+    this.packets_sent = 0;
   }
 
   async setup() {
@@ -38,11 +41,20 @@ export class WispStream {
       if (data == null) {
         break;
       }
+
       this.socket.pause();
-      await this.ws.send(data);
+
+      let packet = new WispPacket({
+        type: DataPayload.type,
+        stream_id: this.stream_id,
+        payload: new DataPayload({
+          data: new WispBuffer(new Uint8Array(data))
+        })
+      });
+      this.conn.ws.send(packet.serialize().bytes);
       this.socket.resume();
     }
-    this.ws.close();
+    await this.close(0x02);
   }
 
   async ws_to_tcp() {
@@ -52,17 +64,31 @@ export class WispStream {
         break; //stream closed
       }
       await this.socket.send(data);
+
+      this.packets_sent++;
+      if (this.packets_sent % (WispStream.buffer_size / 2) !== 0) {
+        continue;
+      }
+      let packet = new WispPacket({
+        type: ContinuePayload.type,
+        stream_id: stream_id,
+        payload: new ContinuePayload({
+          buffer_remaining: WispStream.buffer_size - this.send_buffer.size
+        })
+      });
+      this.conn.ws.send(packet.serialize().bytes);
     }
-    await this.socket.close();
+    await this.close();
   }
 
   async close(reason = null) {
     this.send_buffer.close();
+    this.socket.close();
     if (reason == null) return;
 
     let packet = new WispPacket({
       type: ClosePayload.type,
-      stream_id: stream_id,
+      stream_id: this.stream_id,
       payload: new ClosePayload({
         reason: reason
       })
@@ -71,20 +97,21 @@ export class WispStream {
   }
 
   async put_data(data) {
-    await this.send_buffer.push(data);
+    await this.send_buffer.put(data);
   }
 }
 
 export class WispConnection {
-  constructor(ws, path, {TCPSocket=NodeTCPSocket, UDPSocket=NodeUDPSocket}) {
+  constructor(ws, path, {TCPSocket, UDPSocket} = {}) {
     this.ws = new AsyncWebSocket(ws);
     this.path = path;
-    this.TCPSocket = TCPSocket;
-    this.UDPSocket = UDPSocket;
+    this.TCPSocket = TCPSocket || NodeTCPSocket;
+    this.UDPSocket = UDPSocket || NodeUDPSocket;
     this.streams = {};
   }
 
   async setup() {
+    await this.ws.connect();
     let packet = new WispPacket({
       type: ContinuePayload.type,
       stream_id: 0,
@@ -98,33 +125,36 @@ export class WispConnection {
   async create_stream(stream_id, type, hostname, port) {
     let SocketImpl = type === 0x01 ? this.TCPSocket : this.UDPSocket;
     let socket = new SocketImpl(hostname, port);
-    let stream = new WispStream(this, socket);
+    let stream = new WispStream(stream_id, this, socket);
     this.streams[stream_id] = stream;
 
     //start connecting to the destination server in the background
     stream.setup().catch((error) => {
       console.warn(`warning: creating a stream to ${hostname}:${port} failed - ${error}`);
-      this.close_stream(stream_id);
+      this.close_stream(stream_id, 0x03);
     });
   }
 
   async close_stream(stream_id, reason = null) {
-    await self.streams[stream_id].close(reason);
-    delete self.streams[stream_id];
+    await this.streams[stream_id].close(reason);
+    delete this.streams[stream_id];
   }
 
   async route_packet(buffer) {
     let packet = WispPacket.parse_all(buffer);
-    let stream = this.stream[packet.stream_id];
+    let stream = this.streams[packet.stream_id];
 
-    if (stream == null && packet.stream_id !== 0) {
-      console.warn(`warning: received a ${packet_classes[packet.type].name} packet for a stream which doesn't exist`);
+    //console.log(packet);
+
+    if (stream == null && packet.type == DataPayload.type) {
+      console.warn(`warning: received a ${packet_classes[packet.stream_id].name} packet for a stream which doesn't exist`);
       return;
     }
 
     if (packet.type === ConnectPayload.type) {
-      this.create_stream(
-        stream.stream_id, 
+      console.log(`info: opening new stream to ${packet.payload.hostname}:${packet.payload.port}`);
+      await this.create_stream(
+        packet.stream_id, 
         packet.payload.stream_type, 
         packet.payload.hostname, 
         packet.payload.port
@@ -132,7 +162,7 @@ export class WispConnection {
     }
 
     else if (packet.type === DataPayload.type) {
-      this.stream.put_data(packet.payload.data.bytes);
+      stream.put_data(packet.payload.data.bytes);
     }
 
     else if (packet.type == ContinuePayload.type) {
@@ -159,7 +189,7 @@ export class WispConnection {
       }
       
       try {
-        await this.route_packet(new WispBuffer(data));
+        this.route_packet(new WispBuffer(new Uint8Array(data)));
       }
       catch (error) {
         console.warn(`warning: routing a packet failed - ${error}`);

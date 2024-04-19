@@ -12,7 +12,6 @@ export class WispWebSocket extends EventTarget {
     this.protocols = protocols
     this.binaryType = "blob";
     this.stream = null;
-    this.event_listeners = {};
     this.connection = null;
 
     //legacy event handlers
@@ -25,7 +24,8 @@ export class WispWebSocket extends EventTarget {
     this.OPEN = 1;
     this.CLOSING = 2;
     this.CLOSED = 3;
-    
+    this._ready_state = this.CONNECTING;
+
     //parse the wsproxy url
     let url_split = this.url.split("/");
     let wsproxy_path = url_split.pop().split(":");
@@ -37,7 +37,9 @@ export class WispWebSocket extends EventTarget {
   }
 
   on_conn_close() {
+    this._ready_state = this.CLOSED;
     if (_wisp_connections[this.real_url]) {
+      this.onerror(new Event("error"));
       this.dispatchEvent(new Event("error"));
     }
     delete _wisp_connections[this.real_url];
@@ -74,6 +76,7 @@ export class WispWebSocket extends EventTarget {
   }
 
   init_stream() {
+    this._ready_state = this.OPEN;
     this.stream = this.connection.create_stream(this.host, this.port);
 
     this.stream.onmessage = (raw_data) => {
@@ -93,6 +96,7 @@ export class WispWebSocket extends EventTarget {
     };
 
     this.stream.onclose = (reason) => {
+      this._ready_state = this.CLOSED;
       let close_event = new RealCloseEvent("close", {code: reason}); 
       this.onclose(close_event);
       this.dispatchEvent(close_event);
@@ -156,15 +160,6 @@ export class WispWebSocket extends EventTarget {
   }
 
   get readyState() {
-    if (this.connection && !this.connection.connected && !this.connection.connecting) {
-      return this.CLOSED;
-    }
-    if (!this.connection || !this.connection.connected) {
-      return this.CONNECTING;
-    }
-    if (this.stream.open) {
-      return this.OPEN;
-    }
-    return this.CLOSED;
+    return this._ready_state;
   }
 }
