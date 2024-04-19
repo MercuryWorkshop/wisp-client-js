@@ -42,11 +42,11 @@ export class WispBuffer {
 
 export class WispPacket {
   static min_size = 5;
-  constructor(params) {
-    this.type = params.type;
-    this.stream_id = params.stream_id;
-    this.payload_bytes = params.payload_bytes;
-    this.payload = params.payload;
+  constructor({type, stream_id, payload, payload_bytes }) {
+    this.type = type;
+    this.stream_id = stream_id;
+    this.payload_bytes = payload;
+    this.payload = payload_bytes;
   }
   static parse(buffer) {
     return new WispPacket({
@@ -83,10 +83,10 @@ export class ConnectPayload {
   static min_size = 3;
   static type = 0x01;
   static name = "CONNECT";
-  constructor(params) {
-    this.stream_type = params.stream_type;
-    this.port = params.port;
-    this.hostname = params.host;
+  constructor({stream_type, port, hostname}) {
+    this.stream_type = stream_type;
+    this.port = port;
+    this.hostname = hostname;
   }
   static parse(buffer) {
     return new ConnectPayload({
@@ -108,8 +108,8 @@ export class DataPayload {
   static min_size = 0;
   static type = 0x02;
   static name = "DATA";
-  constructor(params) {
-    this.data = params.data;
+  constructor({data}) {
+    this.data = data;
   }
   static parse(buffer) {
     return new DataPayload({
@@ -124,8 +124,8 @@ export class DataPayload {
 export class ContinuePayload {
   static type = 0x03;
   static name = "CONTINUE";
-  constructor(params) {
-    this.buffer_remaining = params.buffer_remaining;
+  constructor({buffer_remaining}) {
+    this.buffer_remaining = buffer_remaining;
   }
   static parse(buffer) {
     return new ContinuePayload({
@@ -143,8 +143,8 @@ export class ClosePayload {
   static min_size = 1;
   static type = 0x04;
   static name = "CLOSE";
-  constructor(params) {
-    this.reason = params.reason;
+  constructor({reason}) {
+    this.reason = reason;
   }
   static parse(buffer) {
     return new ContinuePayload({
