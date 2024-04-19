@@ -47,17 +47,11 @@ export class WispStream {
 
   async ws_to_tcp() {
     while (true) {
-      let data;
-      try {
-        data = await this.ws.recv();
-      }
-      catch (e) {
-        console.warn(e);
-        break; //websocket error - close the tcp socket
-      }
+      let data = await this.send_buffer.get();
       if (data == null) {
-        break; //websocket graceful shutdown
+        break; //stream closed
       }
+      await this.socket.send(data);
     }
     await this.socket.close();
   }

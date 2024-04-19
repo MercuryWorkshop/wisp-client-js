@@ -13,7 +13,7 @@ if (is_node) {
   dns = await import("node:dns/promises");
 }
 
-function assert_on_node() {
+export function assert_on_node() {
   if (!is_node) {
     throw "not running on node.js";
   }

@@ -48,6 +48,7 @@ export class WSProxyConnection {
       if (data == null) {
         break; //websocket graceful shutdown
       }
+      await this.socket.send(data);
     }
     await this.socket.close();
   }

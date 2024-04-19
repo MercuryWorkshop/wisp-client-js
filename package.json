@@ -1,7 +1,7 @@
 {
   "name": "@mercuryworkshop/wisp-client-js",
   "version": "2.0.0-dev",
-  "description": "A Wisp client implementation, written in Javascript",
+  "description": "A client and server for the Wisp protocol, written in Javascript",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/MercuryWorkshop/wisp-client-js.git"
@@ -15,7 +15,8 @@
   "main": "./src/index.mjs",
   "exports": {
     ".": "./index.mjs",
-    "./client": "./client.mjs"
+    "./client": "./client.mjs",
+    "./server": "./server.mjs"
   },
   "files": [
     "dist",
