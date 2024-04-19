@@ -1,4 +1,3 @@
-import { logging } from "../entrypoints/server.mjs";
 import { AsyncQueue } from "../websocket.mjs";
 
 //wrappers for node networking apis
@@ -56,9 +55,12 @@ export class NodeTCPSocket {
         if (error && !this.connected) reject();
         else this.data_queue.close();
       });
+      this.socket.on("error", (error) => {
+        console.warn(`tcp stream to ${this.hostname} ended with error - ${error}`);
+      });
       this.socket.on("end", () => {
         this.socket.destroy();
-      })
+      });
       this.socket.connect({
         host: ip,
         port: this.port

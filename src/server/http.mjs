@@ -20,16 +20,18 @@ export function routeRequest(request, socket, head) {
 
   if (request instanceof IncomingMessage) {
     ws_server.handleUpgrade(request, socket, head, (ws) => {
-      create_connection(ws, request.url);
+      create_connection(ws, request.url, request);
     });
   }
   else if (request instanceof NodeWebSocket) {
-    create_connection(ws, "/");
+    create_connection(ws, "/", {});
   }
 }
 
-async function create_connection(ws, path) {
-  logging.info("new connection on " + path);
+async function create_connection(ws, path, request) {
+  let client_ip = request.socket.address().address;
+  logging.info(`new connection on ${path} from ${client_ip}`);
+
   if (path.endsWith("/")) {
     let wisp_conn = new WispConnection(ws, path);
     await wisp_conn.setup();

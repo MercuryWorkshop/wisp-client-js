@@ -2,7 +2,10 @@
 import { server as wisp, logging } from "./src/entrypoints/server.mjs";
 import http from "node:http";
 
-const server = http.createServer();
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("wisp server js rewrite");
+});
 logging.set_level(logging.DEBUG);
 
 server.on("upgrade", (req, socket, head) => {
@@ -13,6 +16,4 @@ server.on("listening", () => {
   console.log("HTTP server listening");
 });
 
-server.listen({
-  port: 5001
-});
+server.listen(5001, "127.0.0.1");

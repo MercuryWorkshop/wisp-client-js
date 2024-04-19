@@ -72,7 +72,7 @@ export class WispStream {
       }
       let packet = new WispPacket({
         type: ContinuePayload.type,
-        stream_id: stream_id,
+        stream_id: this.stream_id,
         payload: new ContinuePayload({
           buffer_remaining: WispStream.buffer_size - this.send_buffer.size
         })
