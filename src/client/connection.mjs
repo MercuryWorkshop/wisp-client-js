@@ -1,4 +1,4 @@
-import { RealWS } from "../compat.mjs";
+import { RealWS } from "../websocket.mjs";
 import {
   packet_classes,
   packet_types,

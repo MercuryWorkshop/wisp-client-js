@@ -1,5 +1,3 @@
-import { WispBuffer } from "../packet.mjs";
-
 //wrappers for node networking apis
 //in the browser these can be redefined to allow for custom transports
 
@@ -101,7 +99,7 @@ export class NodeUDPSocket {
         resolve();
       });
       this.socket.on("message", (data) => {
-        this.onmessage(new WispBuffer(data));
+        this.onmessage(data);
       });
       this.socket.on("error", () => {
         if (!this.connected) reject();
