@@ -72,30 +72,39 @@ export class AsyncQueue {
     this.get_callbacks = [];
   }
 
-  async put(data) {
+  put_now(data) {
     this.queue.push(data);
     this.get_callbacks.shift()?.();
-    if (this.queue.length <= this.max_size) return;
+  }
+
+  async put(data) {
+    if (this.size <= this.max_size) {
+      this.put_now(data);
+      return;
+    }
 
     //wait until there is a place to put the item
     await new Promise((resolve) => {
       this.put_callbacks.push(resolve);
     });
+    this.put_now(data);
+  }
+
+  get_now() {
+    this.put_callbacks.shift()?.();
+    return this.queue.shift();
   }
 
   async get() {
-    if (this.queue[0]) {
-      this.put_callbacks.shift()?.();
-      return this.queue.shift();
+    if (this.size > 0) {
+      return this.get_now();
     }
 
     //wait until there is an item available in the queue
     await new Promise((resolve) => {
       this.get_callbacks.push(resolve);
     });
-    let data = this.queue.shift();
-    this.put_callbacks.shift()?.();
-    return data;
+    return this.get_now();
   }
 
   close() {
@@ -109,6 +118,6 @@ export class AsyncQueue {
   }
 
   get size() {
-    return this.queue.size;
+    return this.queue.length;
   }
 }

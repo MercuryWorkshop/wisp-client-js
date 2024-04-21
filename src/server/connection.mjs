@@ -164,7 +164,7 @@ export class WispConnection {
     let stream = this.streams[packet.stream_id];
 
     if (stream == null && packet.type == DataPayload.type) {
-      logging.warn(`(${this.conn_id}) received a ${packet_classes[packet.stream_id].name} packet for a stream which doesn't exist`);
+      logging.warn(`(${this.conn_id}) received a DATA packet for a stream which doesn't exist`);
       return;
     }
 
