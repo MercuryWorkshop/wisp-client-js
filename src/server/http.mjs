@@ -15,31 +15,31 @@ if (is_node) {
   ws_server = new WebSocketServer({ noServer: true });
 }
 
-export function routeRequest(request, socket, head) {
+export function routeRequest(request, socket, head, options={}) {
   assert_on_node();
 
   if (request instanceof IncomingMessage) {
     ws_server.handleUpgrade(request, socket, head, (ws) => {
-      create_connection(ws, request.url, request);
+      create_connection(ws, request.url, request, options);
     });
   }
   else if (request instanceof NodeWebSocket) {
-    create_connection(ws, "/", {});
+    create_connection(ws, "/", {}), options;
   }
 }
 
-async function create_connection(ws, path, request) {
+async function create_connection(ws, path, request, options) {
   let client_ip = request.socket.address().address;
   logging.info(`new connection on ${path} from ${client_ip}`);
 
   if (path.endsWith("/")) {
-    let wisp_conn = new WispConnection(ws, path);
+    let wisp_conn = new WispConnection(ws, path, options);
     await wisp_conn.setup();
     await wisp_conn.run();
   }
 
   else {
-    let wsproxy = new WSProxyConnection(ws, path);
+    let wsproxy = new WSProxyConnection(ws, path, options);
     await wsproxy.setup();
   }
 }

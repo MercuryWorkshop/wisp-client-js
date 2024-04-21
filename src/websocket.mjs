@@ -3,9 +3,14 @@
 export const RealCloseEvent = (globalThis.CloseEvent || Event);
 
 export let RealWS = globalThis.WebSocket;
+export let RealCrypto = globalThis.crypto;
 if (typeof process !== "undefined") {
-  let ws = await import("ws");
-  RealWS = ws.WebSocket;
+  RealWS = (await import("ws")).WebSocket;
+  RealCrypto = await import("crypto");
+}
+
+export function get_conn_id() {
+  return RealCrypto.randomUUID().split("-")[0];
 }
 
 //an async websocket wrapper
@@ -32,6 +37,7 @@ export class AsyncWebSocket {
         else this.data_queue.close();
       }
       if (this.ws.readyState === this.ws.OPEN) {
+        this.connected = true;
         resolve();
       }
     });
