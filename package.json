@@ -14,9 +14,9 @@
   "homepage": "https://github.com/MercuryWorkshop/wisp-client-js#readme",
   "main": "./src/index.mjs",
   "exports": {
-    ".": "./index.mjs",
-    "./client": "./client.mjs",
-    "./server": "./server.mjs"
+    ".": "./src/index.mjs",
+    "./client": "./src/entrypoints/client.mjs",
+    "./server": "./src/entrypoints/server.mjs"
   },
   "files": [
     "dist",
