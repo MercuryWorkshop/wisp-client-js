@@ -7,8 +7,7 @@ import {
   ContinuePayload,
   ClosePayload,
   ConnectPayload,
-  DataPayload,
-  packet_classes
+  DataPayload
 } from "../packet.mjs";
 
 export class WispStream {
@@ -44,7 +43,6 @@ export class WispStream {
       }
 
       this.socket.pause();
-
       let packet = new WispPacket({
         type: DataPayload.type,
         stream_id: this.stream_id,
@@ -128,6 +126,9 @@ export class WispConnection {
     });
     await this.ws.send(packet.serialize().bytes);
 
+    if (typeof this.ws.ws.ping !== "function") {
+      return;  
+    }
     this.ping_task = setInterval(() => {
       logging.debug(`(${this.conn_id}) sending websocket ping`);
       this.ws.ws.ping();

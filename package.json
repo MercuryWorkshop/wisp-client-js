@@ -26,7 +26,8 @@
     "build": "mkdir -p dist; esbuild --bundle --external:ws --platform=neutral src/entrypoints/client.mjs | head -n -4 > dist/wisp.js"
   },
   "dependencies": {
-    "ws": "^8.16.0"
+    "ws": "^8.16.0",
+    "bufferutil": "^4.0.8"
   },
   "devDependencies": {
     "esbuild": "^0.20.2"

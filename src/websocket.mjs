@@ -15,7 +15,7 @@ export function get_conn_id() {
 
 //an async websocket wrapper
 export class AsyncWebSocket {
-  send_buffer_size = 1024 ** 3;
+  send_buffer_size = 32*1024*1024;
   
   constructor(ws) {
     this.ws = ws;

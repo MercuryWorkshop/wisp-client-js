@@ -1,5 +1,5 @@
 //replace with "@mercuryworkshop/wisp-js/server"
-import { server as wisp, logging } from "./src/entrypoints/server.mjs";
+import { server as wisp, logging } from "../src/entrypoints/server.mjs";
 import http from "node:http";
 
 const server = http.createServer((req, res) => {
