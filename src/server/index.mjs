@@ -1,2 +1,2 @@
-export { ServerStream, ServerConnection} from "./server.mjs";
+export { ServerStream, ServerConnection} from "./connection.mjs";
 export { routeRequest } from "./http.mjs";

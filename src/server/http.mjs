@@ -1,5 +1,5 @@
 import * as logging from "../logging.mjs";
-import { ServerConnection } from "./server.mjs";
+import { ServerConnection } from "./connection.mjs";
 import { WSProxyConnection } from "./wsproxy.mjs";
 import { is_node, assert_on_node } from "./net.mjs";
 
