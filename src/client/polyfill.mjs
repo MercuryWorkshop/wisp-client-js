@@ -1,5 +1,5 @@
-import { WispConnection } from "./connection.mjs";
 import { RealCloseEvent } from "../websocket.mjs";
+import { ClientConnection } from "./client.mjs";
 
 //polyfill the DOM Websocket API so that applications using wsproxy can easily use wisp with minimal changes
 
@@ -50,7 +50,7 @@ export class WispWebSocket extends EventTarget {
     this.connection = _wisp_connections[this.real_url];
 
     if (!this.connection) {
-      this.connection = new WispConnection(this.real_url);
+      this.connection = new ClientConnection(this.real_url);
       this.connection.onopen = () => {
         this.init_stream();
       };

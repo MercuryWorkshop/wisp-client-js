@@ -1,5 +1,5 @@
 import * as logging from "../logging.mjs";
-import { WispConnection } from "./connection.mjs";
+import { ServerConnection } from "./server.mjs";
 import { WSProxyConnection } from "./wsproxy.mjs";
 import { is_node, assert_on_node } from "./net.mjs";
 
@@ -33,7 +33,7 @@ async function create_connection(ws, path, request, options) {
   logging.info(`new connection on ${path} from ${client_ip}`);
 
   if (path.endsWith("/")) {
-    let wisp_conn = new WispConnection(ws, path, options);
+    let wisp_conn = new ServerConnection(ws, path, options);
     await wisp_conn.setup();
     await wisp_conn.run();
   }

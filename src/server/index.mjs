@@ -1,2 +1,2 @@
-export { WispStream, WispConnection} from "./connection.mjs";
+export { ServerStream, ServerConnection} from "./server.mjs";
 export { routeRequest } from "./http.mjs";

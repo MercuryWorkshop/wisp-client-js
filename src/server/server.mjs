@@ -10,14 +10,14 @@ import {
   DataPayload
 } from "../packet.mjs";
 
-export class WispStream {
+export class ServerStream {
   static buffer_size = 128;
 
   constructor(stream_id, conn, socket) {
     this.stream_id = stream_id;
     this.conn = conn;
     this.socket = socket;
-    this.send_buffer = new AsyncQueue(WispStream.buffer_size);
+    this.send_buffer = new AsyncQueue(ServerStream.buffer_size);
     this.packets_sent = 0;
   }
 
@@ -65,14 +65,14 @@ export class WispStream {
       await this.socket.send(data);
 
       this.packets_sent++;
-      if (this.packets_sent % (WispStream.buffer_size / 2) !== 0) {
+      if (this.packets_sent % (ServerStream.buffer_size / 2) !== 0) {
         continue;
       }
       let packet = new WispPacket({
         type: ContinuePayload.type,
         stream_id: this.stream_id,
         payload: new ContinuePayload({
-          buffer_remaining: WispStream.buffer_size - this.send_buffer.size
+          buffer_remaining: ServerStream.buffer_size - this.send_buffer.size
         })
       });
       this.conn.ws.send(packet.serialize().bytes);
@@ -100,7 +100,7 @@ export class WispStream {
   }
 }
 
-export class WispConnection {
+export class ServerConnection {
   constructor(ws, path, {TCPSocket, UDPSocket, ping_interval} = {}) {
     this.ws = new AsyncWebSocket(ws);
     this.path = path;
@@ -121,7 +121,7 @@ export class WispConnection {
       type: ContinuePayload.type,
       stream_id: 0,
       payload: new ContinuePayload({
-        buffer_remaining: WispStream.buffer_size
+        buffer_remaining: ServerStream.buffer_size
       })
     });
     await this.ws.send(packet.serialize().bytes);
@@ -138,7 +138,7 @@ export class WispConnection {
   async create_stream(stream_id, type, hostname, port) {
     let SocketImpl = type === 0x01 ? this.TCPSocket : this.UDPSocket;
     let socket = new SocketImpl(hostname, port);
-    let stream = new WispStream(stream_id, this, socket);
+    let stream = new ServerStream(stream_id, this, socket);
     this.streams[stream_id] = stream;
 
     //start connecting to the destination server in the background

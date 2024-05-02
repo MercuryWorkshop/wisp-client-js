@@ -9,7 +9,7 @@ import {
   ClosePayload
 } from "../packet.mjs";
 
-class WispStream {
+class ClientStream {
   constructor(hostname, port, websocket, buffer_size, stream_id, connection, stream_type) {
     this.hostname = hostname;
     this.port = port;
@@ -70,7 +70,7 @@ class WispStream {
   }
 }
 
-export class WispConnection {
+export class ClientConnection {
   constructor(wisp_url) {
     if (!wisp_url.endsWith("/")) {
       throw "wisp endpoints must end with a trailing forward slash";
@@ -130,7 +130,7 @@ export class WispConnection {
   create_stream(hostname, port, type="tcp") {
     let stream_type = type === "udp" ? 0x02 : 0x01;
     let stream_id = this.next_stream_id++;
-    let stream = new WispStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this, stream_type);
+    let stream = new ClientStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this, stream_type);
     this.active_streams[stream_id] = stream;
     stream.open = this.connected;
 
