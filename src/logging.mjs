@@ -8,7 +8,7 @@ export let log_level = INFO;
 export function get_timestamp() {
   let [date, time] = new Date().toJSON().split("T");
   time = time.split(".")[0];
-  return `[${date} ${time}]`;
+  return `[${date} - ${time}]`;
 }
 
 export function set_level(level) {

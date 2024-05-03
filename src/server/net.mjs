@@ -35,10 +35,11 @@ export class NodeTCPSocket {
     assert_on_node();
     this.hostname = hostname;
     this.port = port;
+    this.recv_buffer_size = 128;
 
     this.socket = null;
     this.connected = false;
-    this.data_queue = new AsyncQueue(1);
+    this.data_queue = new AsyncQueue(this.recv_buffer_size);
   }
 
   async connect() {
@@ -85,7 +86,9 @@ export class NodeTCPSocket {
   }
 
   pause() {
-    this.socket.pause();
+    if (this.data_queue.size >= this.data_queue.max_size) {
+      this.socket.pause();
+    }
   }
   resume() {
     this.socket.resume();
@@ -100,7 +103,8 @@ export class NodeUDPSocket {
 
     this.ip = null;
     this.connected = false;
-    this.data_queue = new AsyncQueue(1);
+    this.recv_buffer_size = 128;
+    this.data_queue = new AsyncQueue(this.recv_buffer_size);
   }
 
   async connect() {
@@ -111,16 +115,13 @@ export class NodeUDPSocket {
         resolve();
       });
       this.socket.on("message", (data) => {
-        this.onmessage(data);
+        this.data_queue.put(data);
       });
       this.socket.on("error", () => {
         if (!this.connected) reject();
         this.data_queue.close();
       });
-      this.socket.connect({
-        address: ip,
-        port: this.port
-      });
+      this.socket.connect(this.port, ip);
     });
   }
 
@@ -134,6 +135,9 @@ export class NodeUDPSocket {
 
   async close() {
     if (!this.socket) return;
-    this.socket.end();
+    this.socket.close();
   }
+
+  pause() {}
+  resume() {}
 }

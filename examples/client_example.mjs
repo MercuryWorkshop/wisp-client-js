@@ -1,6 +1,6 @@
 //replace with "@mercuryworkshop/wisp-js/client"
 import { client } from "../src/index.mjs";
-const { WispConnection, WispWebSocket, _wisp_connections } = client;
+const { ClientConnection, WispWebSocket, _wisp_connections } = client;
 
 let ws_url = `ws://localhost:5001/ws/`;
 if (typeof process === "undefined") {
@@ -41,9 +41,18 @@ function run_demo() {
       process.exit();
     }
   });
+
+  let conn = new ClientConnection(ws_url);
+  conn.onopen = () => {
+    let stream = conn.create_stream("127.0.0.1", 5553, "udp");
+    stream.onmessage = (data) => {
+      console.log(data);
+    }
+    stream.send(new TextEncoder().encode("hello"));
+  }
 }
 
-globalThis.WispConnection = WispConnection;
+globalThis.ClientConnection = ClientConnection;
 globalThis.WispWebSocket = WispWebSocket;
 globalThis.ws_url = ws_url;
 globalThis.run_demo = run_demo;

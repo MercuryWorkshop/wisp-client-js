@@ -50,7 +50,7 @@ export class ServerStream {
           data: new WispBuffer(new Uint8Array(data))
         })
       });
-      this.conn.ws.send(packet.serialize().bytes);
+      await this.conn.ws.send(packet.serialize().bytes);
       this.socket.resume();
     }
     await this.conn.close_stream(this.stream_id, 0x02);

@@ -61,6 +61,10 @@ export class AsyncWebSocket {
       await new Promise((resolve) => {setTimeout(resolve, 10)});
     }
   }
+
+  get buffered_amount() {
+    return this.ws.bufferedAmount;
+  }
 }
 
 //an async fifo queue
