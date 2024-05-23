@@ -148,7 +148,7 @@ export class ClosePayload {
     this.reason = reason;
   }
   static parse(buffer) {
-    return new ContinuePayload({
+    return new ClosePayload({
       reason: buffer.view.getUint8(0),
     });
   }
@@ -159,17 +159,90 @@ export class ClosePayload {
   }
 }
 
+class Extension {
+  constructor({ ext_id, buffer }) {
+    this.ext_id = ext_id;
+    this.buffer = buffer;
+  }
+}
+export class InfoPayload {
+  static min_size = 2;
+  static type = 0x05;
+  static name = "INFO";
+  constructor(
+    { minor_ver, major_ver, extensions }j
+  ) {
+    this.minor_ver=minor_ver;
+    this.major_ver= major_ver;
+    this.extensions= extensions;
+  }
+  static parse(buffer) {
+    let cursor=2;
+    let extensions= [];
+    while (cursor < buffer.size) {
+      let ext_id= buffer.view.getUint8(cursor);
+      cursor += 1;
+      if (cursor > buffer.size) break;
+      let payload_length= buffer.view.getUint32(cursor);
+      cursor += 4;
+      if (cursor + payload_length > 
+        buffer.size)
+        break;
+      let ext_buffer= new WispBuffer(payload_length);
+      for (let mini_cursor= 0; mini_cursor < payload_length; mini_cursor++) {
+        ext_buffer.view[mini_cursor]= buffer.view[mini_cursor + cursor];
+      }
+      cursor += payload_length;
+      extensions.push(new Extension({ ext_id: ext_id, buffer: ext_buffer }))
+    }
+
+    return new InfoPayload ( {
+      major_ver: buffer.view.getUint8(0),
+      minor_ver: 
+      buffer.view.getUint8(1),
+      extensions: extensions,
+    });
+  }
+  serialize() {
+    let buffer = new WispBuffer(1 + 1 +
+      this.extensions.reduce((total, value) => 1 
+        + 4 + value.buffer.size, 0)); // minor + major + [(id + payloadlength + payload)...]
+    buffer
+      .view.setUint8(0, 
+      this.major_ver);
+    buffer
+      .view.setUint8(1, this.minor_ver);
+    let cursor = 2;
+    this.extensions.forEach(
+      ext
+      => {
+      buffer.view.setUint8(cursor, ext.ext_id);
+      cursor += 1;
+      buffer.view.setUint32(cursor, ext.buffer.size);
+      cursor += 4
+      for (let mini_cursor = 0; mini_cursor < ext.buffer.size; mini_cursor++) {
+        buffer.view[mini_cursor + cursor] = ext.buffer.view[mini_cursor];
+      }
+      cursor += ext.buffer.size;
+    })
+    return buffer;
+  }
+}
+
+
 export const packet_classes = [
   undefined,
   ConnectPayload, 
   DataPayload, 
   ContinuePayload, 
-  ClosePayload
+  ClosePayload, 
+  InfoPayload, 
 ]
 
 export const packet_types = {
   CONNECT: 0x01,
   DATA: 0x02,
   CONTINUE: 0x03,
-  CLOSE: 0x04
+  CLOSE: 0x04,
+  INFO: 0x05
 }

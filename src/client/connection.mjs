@@ -162,7 +162,7 @@ export class ClientConnection {
       return;
     }
 
-    if (packet.type === packet_types.DATA) { //DATA packets
+    if (packet.type === packet_types.DATA) {
       stream.onmessage(packet.payload_bytes.bytes);
     }
 
@@ -170,13 +170,18 @@ export class ClientConnection {
       this.max_buffer_size = packet.payload.buffer_remaining;
     }
 
-    else if (packet.type === packet_types.CONTINUE) { //other CONTINUE packets
+    else if (packet.type === packet_types.CONTINUE) {
       stream.continue_received(packet.payload.buffer_size);
     }
 
-    else if (packet.type === packet_types.CLOSE) { //CLOSE packets
+    else if (packet.type === packet_types.CLOSE) {
       this.close_stream(stream, packet.payload.reason);
     }
+
+    else if (packet.type === packet_types.INFO) {
+      // TODO: handle extensions and validate
+    }
+
 
     else {
       console.warn(`wisp client warning: receive an invalid packet of type ${packet.type}`);
