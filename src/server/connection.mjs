@@ -7,7 +7,8 @@ import {
   ContinuePayload,
   ClosePayload,
   ConnectPayload,
-  DataPayload
+  DataPayload,
+  InfoPayload
 } from "../packet.mjs";
 
 export class ServerStream {
@@ -189,6 +190,9 @@ export class ServerConnection {
 
     else if (packet.type == ClosePayload.type) {
       await this.close_stream(packet.stream_id, packet.reason);
+    }
+    else if (packet.type == InfoPayload.type) {
+      // TODO: Handle this shit.
     }
   }
 

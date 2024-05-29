@@ -1,9 +1,10 @@
 //shared packet parsing / serialization code
+import {Extension} from "./extensions.mjs"
 
 const text_encoder = new TextEncoder();
-const encode_text = text_encoder.encode.bind(text_encoder);
+export const encode_text = text_encoder.encode.bind(text_encoder);
 const text_decoder = new TextDecoder();
-const decode_text = text_decoder.decode.bind(text_decoder);
+export const decode_text = text_decoder.decode.bind(text_decoder);
 
 export class WispBuffer {
   constructor(data) {
@@ -159,18 +160,12 @@ export class ClosePayload {
   }
 }
 
-class Extension {
-  constructor({ ext_id, buffer }) {
-    this.ext_id = ext_id;
-    this.buffer = buffer;
-  }
-}
 export class InfoPayload {
   static min_size = 2;
   static type = 0x05;
   static name = "INFO";
   constructor(
-    { minor_ver, major_ver, extensions }j
+    { minor_ver, major_ver, extensions }
   ) {
     this.minor_ver=minor_ver;
     this.major_ver= major_ver;
@@ -190,7 +185,7 @@ export class InfoPayload {
         break;
       let ext_buffer= new WispBuffer(payload_length);
       for (let mini_cursor= 0; mini_cursor < payload_length; mini_cursor++) {
-        ext_buffer.view[mini_cursor]= buffer.view[mini_cursor + cursor];
+        ext_buffer.bytes[mini_cursor]= buffer.bytes[mini_cursor + cursor];
       }
       cursor += payload_length;
       extensions.push(new Extension({ ext_id: ext_id, buffer: ext_buffer }))
@@ -205,8 +200,7 @@ export class InfoPayload {
   }
   serialize() {
     let buffer = new WispBuffer(1 + 1 +
-      this.extensions.reduce((total, value) => 1 
-        + 4 + value.buffer.size, 0)); // minor + major + [(id + payloadlength + payload)...]
+      this.extensions.reduce((total, value) => 1 + 4 + value.buffer.size, 0)); // minor + major + [(id + payloadlength + payload)...]
     buffer
       .view.setUint8(0, 
       this.major_ver);
@@ -214,14 +208,13 @@ export class InfoPayload {
       .view.setUint8(1, this.minor_ver);
     let cursor = 2;
     this.extensions.forEach(
-      ext
-      => {
+      ext => {
       buffer.view.setUint8(cursor, ext.ext_id);
       cursor += 1;
       buffer.view.setUint32(cursor, ext.buffer.size);
       cursor += 4
       for (let mini_cursor = 0; mini_cursor < ext.buffer.size; mini_cursor++) {
-        buffer.view[mini_cursor + cursor] = ext.buffer.view[mini_cursor];
+        buffer.bytes[mini_cursor + cursor] = ext.buffer.bytes[mini_cursor];
       }
       cursor += ext.buffer.size;
     })
@@ -246,3 +239,10 @@ export const packet_types = {
   CLOSE: 0x04,
   INFO: 0x05
 }
+
+export const extension_types= {
+  UDP: 0x01,
+  PASSWORD_AUTH: 0x02,
+}
+
+
