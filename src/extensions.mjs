@@ -48,6 +48,9 @@ export class UDPExtension extends ExtensionWrapper {
   serialize() {
     return super.createExtension(new WispBuffer(0));
   }
+  static parse(fromServerm, extension) {
+    return new UDPExtension(fromServer);
+  }
 }
 export class PasswordAuthExtension extends ExtensionWrapper {
   constructor(isServer, username, password) {
@@ -84,4 +87,9 @@ export class PasswordAuthExtension extends ExtensionWrapper {
 
     return super.createExtension(buffer);
   }
+  static parse(fromServer, extension) {
+    return new PasswordAuthExtension(fromServer)
+    // TODO: actual parsing here
+  }
+
 }
