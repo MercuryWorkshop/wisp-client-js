@@ -56,12 +56,14 @@ export class NodeTCPSocket {
       this.socket.on("close", (error) => {
         if (error && !this.connected) reject();
         else this.data_queue.close();
+        this.socket = null;
       });
       this.socket.on("error", (error) => {
         logging.warn(`tcp stream to ${this.hostname} ended with error - ${error}`);
       });
       this.socket.on("end", () => {
         this.socket.destroy();
+        this.socket = null;
       });
       this.socket.connect({
         host: ip,
@@ -109,8 +111,9 @@ export class NodeUDPSocket {
 
   async connect() {
     let ip = await lookup_ip(this.hostname);
+    let ip_level = net.isIP(ip);
     await new Promise((resolve, reject) => {
-      this.socket = dgram.createSocket(this.ip_level === 6 ? "udp6" : "udp4");
+      this.socket = dgram.createSocket(ip_level === 6 ? "udp6" : "udp4");
       this.socket.on("connect", () => {
         resolve();
       });
@@ -120,8 +123,8 @@ export class NodeUDPSocket {
       this.socket.on("error", () => {
         if (!this.connected) reject();
         this.data_queue.close();
+        this.socket = null;
       });
-      this.socket.connect(this.port, ip);
     });
   }
 
