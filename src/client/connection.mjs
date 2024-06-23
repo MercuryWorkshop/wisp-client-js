@@ -2,6 +2,7 @@ import { RealWS } from "../websocket.mjs";
 import {
   packet_classes,
   packet_types,
+  stream_types,
   WispBuffer, 
   WispPacket, 
   ConnectPayload, 
@@ -28,7 +29,7 @@ class ClientStream {
 
   send(data) {
     //note: udp shouldn't buffer anything
-    if (this.buffer_size > 0 || !this.open || this.stream_type === 0x02) {
+    if (this.buffer_size > 0 || !this.open || this.stream_type === stream_types.UDP) {
       //construct and send a DATA packet
       let packet = new WispPacket({
         type: packet_types.DATA,
@@ -157,7 +158,7 @@ export class ClientConnection {
     let packet = WispPacket.parse_all(buffer);
     let stream = this.active_streams[packet.stream_id];
 
-    if (typeof stream === "undefined" && packet.stream_id !== 0) {
+    if (typeof stream === "undefined" && (packet.stream_id !== 0 || packet.type !== packet_types.CONTINUE)) {
       console.warn(`wisp client warning: received a ${packet_classes[packet.type].name} packet for a stream which doesn't exist`);
       return;
     }

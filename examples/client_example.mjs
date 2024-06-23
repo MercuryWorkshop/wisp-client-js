@@ -20,9 +20,6 @@ function run_demo() {
   });
   ws.addEventListener("close", () => {
     console.log("stream 1 closed");
-    if (typeof process !== "undefined" && ws.readyState === ws.CLOSED && ws2.readyState === ws2.CLOSED) {
-      process.exit();
-    }
   });
 
   let ws2 = new WispWebSocket(ws_url+"www.google.com:80");
@@ -37,18 +34,18 @@ function run_demo() {
   });
   ws2.addEventListener("close", () => {
     console.log("stream 2 closed");
-    if (typeof process !== "undefined" && ws.readyState === ws.CLOSED && ws2.readyState === ws2.CLOSED) {
-      process.exit();
-    }
   });
 
   let conn = new ClientConnection(ws_url);
   conn.onopen = () => {
     let stream = conn.create_stream("127.0.0.1", 5553, "udp");
     stream.onmessage = (data) => {
-      console.log(data);
+      console.log("message from stream 3: ", new TextDecoder().decode(data));
     }
     stream.send(new TextEncoder().encode("hello"));
+  }
+  conn.onclose = () => {
+    console.log("stream 3 closed");
   }
 }
 

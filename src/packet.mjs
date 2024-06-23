@@ -148,7 +148,7 @@ export class ClosePayload {
     this.reason = reason;
   }
   static parse(buffer) {
-    return new ContinuePayload({
+    return new ClosePayload({
       reason: buffer.view.getUint8(0),
     });
   }
@@ -172,4 +172,28 @@ export const packet_types = {
   DATA: 0x02,
   CONTINUE: 0x03,
   CLOSE: 0x04
+}
+
+export const stream_types = {
+  TCP: 0x01,
+  UDP: 0x02
+}
+
+export const close_reasons = {
+  //client/server close reasons
+  Unknown: 0x01,
+  Voluntary: 0x02,
+  NetworkError: 0x03,
+
+  //server only close reasons
+  InvalidInfo: 0x41, 
+  UnreachableHost: 0x42,
+  NoResponse: 0x43,
+  ConnRefused: 0x44,
+  TransferTimeout: 0x47,
+  HostBlocked: 0x48,
+  ConnThrottled: 0x49,
+
+  //client only close reasons
+  ClientError: 0x81
 }

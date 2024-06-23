@@ -85,6 +85,7 @@ export class NodeTCPSocket {
   async close() {
     if (!this.socket) return;
     this.socket.end();
+    this.socket = null;
   }
 
   pause() {
@@ -103,7 +104,6 @@ export class NodeUDPSocket {
     this.hostname = hostname;
     this.port = port;
 
-    this.ip = null;
     this.connected = false;
     this.recv_buffer_size = 128;
     this.data_queue = new AsyncQueue(this.recv_buffer_size);
@@ -125,6 +125,7 @@ export class NodeUDPSocket {
         this.data_queue.close();
         this.socket = null;
       });
+      this.socket.connect(this.port, ip);
     });
   }
 
@@ -139,6 +140,7 @@ export class NodeUDPSocket {
   async close() {
     if (!this.socket) return;
     this.socket.close();
+    this.socket = null;
   }
 
   pause() {}

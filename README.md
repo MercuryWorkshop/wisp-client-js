@@ -2,7 +2,7 @@
 
 This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client, written in Javascript for use on the Web.
 
-## Javascript API:
+## Javascript Client API:
 
 ### Importing the Library:
 To use this library on either NodeJS or the browser, import the `wisp.mjs` file. Alternatively, use the `dist/wisp.js` file in the NPM package if you don't want to use an ES6 module.

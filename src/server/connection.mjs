@@ -1,22 +1,28 @@
 import * as logging from "../logging.mjs";
 import { AsyncQueue, AsyncWebSocket, get_conn_id } from "../websocket.mjs";
 import { NodeTCPSocket, NodeUDPSocket } from "./net.mjs";
+import { options } from "./options.mjs";
 import { 
   WispBuffer,
   WispPacket,
   ContinuePayload,
   ClosePayload,
   ConnectPayload,
-  DataPayload
+  DataPayload,
+  stream_types,
+  close_reasons
 } from "../packet.mjs";
 
 export class ServerStream {
   static buffer_size = 128;
 
-  constructor(stream_id, conn, socket) {
+  constructor(stream_id, conn, socket, hostname, port) {
     this.stream_id = stream_id;
     this.conn = conn;
     this.socket = socket;
+    this.hostname = hostname;
+    this.port = port;
+    
     this.send_buffer = new AsyncQueue(ServerStream.buffer_size);
     this.packets_sent = 0;
   }
@@ -53,7 +59,7 @@ export class ServerStream {
       await this.conn.ws.send(packet.serialize().bytes);
       this.socket.resume();
     }
-    await this.conn.close_stream(this.stream_id, 0x02);
+    await this.conn.close_stream(this.stream_id, close_reasons.Voluntary);
   }
 
   async ws_to_tcp() {
@@ -135,8 +141,66 @@ export class ServerConnection {
     }, this.ping_interval * 1000);
   }
 
+  //returns the close reason if the connection should be blocked
+  is_stream_allowed(type, hostname, port) {
+    //check if tcp or udp should be blocked
+    if (!options.allow_tcp_streams && type === stream_types.TCP)
+      return close_reasons.HostBlocked;
+    if (!options.allow_udp_streams && type === stream_types.UDP)
+      return close_reasons.HostBlocked;
+    
+    //check for stream count limits
+    if (options.stream_limit_total !== -1 && Object.keys(this.streams).length > options.stream_limit_total) 
+      return close_reasons.ConnThrottled;
+    if (options.stream_limit_per_host !== -1) {
+      let streams_per_host = 0;
+      for (let stream of this.streams) {
+        if (stream.socket.hostname === hostname) {
+          streams_per_host++;
+        }
+      }
+      if (streams_per_host > options.stream_limit_per_host)
+        return close_reasons.ConnThrottled;
+    }
+
+    //check the hostname whitelist/blacklist
+    if (options.hostname_whitelist) {
+      let matched = false;
+      for (let regex of options.hostname_whitelist) {
+        if (regex.test(hostname)) {
+          matched = true;
+          break
+        }
+      }
+      if (!matched) 
+        return close_reasons.HostBlocked;
+    }
+    else if (options.hostname_blacklist) {
+      for (let regex of options.hostname_blacklist) {
+        if (regex.test(hostname)) 
+          return close_reasons.HostBlocked;
+      }
+    }
+
+    return 0;
+  }
+
   async create_stream(stream_id, type, hostname, port) {
-    let SocketImpl = type === 0x01 ? this.TCPSocket : this.UDPSocket;
+    let possible_close_reason = this.is_stream_allowed(type, hostname, port);
+    if (possible_close_reason) {
+      logging.warn(`(${this.conn_id}) refusing to create a stream to ${hostname}`);
+      let packet = new WispPacket({
+        type: ClosePayload.type,
+        stream_id: stream_id,
+        payload: new ClosePayload({
+          reason: possible_close_reason
+        })
+      });
+      await this.ws.send(packet.serialize().bytes);
+      return;
+    }
+
+    let SocketImpl = type === stream_types.TCP ? this.TCPSocket : this.UDPSocket;
     let socket = new SocketImpl(hostname, port);
     let stream = new ServerStream(stream_id, this, socket);
     this.streams[stream_id] = stream;
@@ -144,7 +208,7 @@ export class ServerConnection {
     //start connecting to the destination server in the background
     stream.setup().catch((error) => {
       logging.warn(`(${this.conn_id}) creating a stream to ${hostname}:${port} failed - ${error}`);
-      this.close_stream(stream_id, 0x03);
+      this.close_stream(stream_id, close_reasons.NetworkError);
     });
   }
 

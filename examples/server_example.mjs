@@ -7,6 +7,7 @@ const server = http.createServer((req, res) => {
   res.end("wisp server js rewrite");
 });
 logging.set_level(logging.DEBUG);
+wisp.options.allow_tcp_streams = false;
 
 server.on("upgrade", (req, socket, head) => {
   wisp.routeRequest(req, socket, head);
