@@ -1,4 +1,6 @@
 import * as logging from "../logging.mjs";
+import * as filter from "./filter.mjs";
+import { stream_types } from "../packet.mjs";
 import { AsyncWebSocket } from "../websocket.mjs";
 import { NodeTCPSocket } from "./net.mjs";
 
@@ -7,6 +9,11 @@ export class WSProxyConnection {
     let [hostname, port] = path.split("/").pop().split(":");
     this.hostname = hostname;
     this.port = parseInt(port);
+
+    if (!filter.is_stream_allowed(null, stream_types.TCP, this.hostname, this.port)) {
+      throw new Error(`Refusing to create a wsproxy connection to ${this.hostname}:${this.port}`);
+    }
+
     this.socket = new NodeTCPSocket(hostname, port);
     this.ws = new AsyncWebSocket(ws);
   }

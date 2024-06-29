@@ -2,6 +2,8 @@ export const options = {
   //destination hostname restrictions
   hostname_blacklist: null,
   hostname_whitelist: null,
+  port_blacklist: null,
+  port_whitelist: null,
   allow_direct_ip: true, //not implemented!
   allow_private_ips: false, //not implemented!
   allow_loopback_ips: false, //not implemented!

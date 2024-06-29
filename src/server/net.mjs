@@ -62,6 +62,7 @@ export class NodeTCPSocket {
         logging.warn(`tcp stream to ${this.hostname} ended with error - ${error}`);
       });
       this.socket.on("end", () => {
+        if (!this.socket) return;
         this.socket.destroy();
         this.socket = null;
       });

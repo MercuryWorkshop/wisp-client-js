@@ -1,7 +1,7 @@
 import * as logging from "../logging.mjs";
+import * as filter from "./filter.mjs";
 import { AsyncQueue, AsyncWebSocket, get_conn_id } from "../websocket.mjs";
 import { NodeTCPSocket, NodeUDPSocket } from "./net.mjs";
-import { options } from "./options.mjs";
 import { 
   WispBuffer,
   WispPacket,
@@ -16,13 +16,10 @@ import {
 export class ServerStream {
   static buffer_size = 128;
 
-  constructor(stream_id, conn, socket, hostname, port) {
+  constructor(stream_id, conn, socket) {
     this.stream_id = stream_id;
     this.conn = conn;
-    this.socket = socket;
-    this.hostname = hostname;
-    this.port = port;
-    
+    this.socket = socket;    
     this.send_buffer = new AsyncQueue(ServerStream.buffer_size);
     this.packets_sent = 0;
   }
@@ -141,54 +138,10 @@ export class ServerConnection {
     }, this.ping_interval * 1000);
   }
 
-  //returns the close reason if the connection should be blocked
-  is_stream_allowed(type, hostname, port) {
-    //check if tcp or udp should be blocked
-    if (!options.allow_tcp_streams && type === stream_types.TCP)
-      return close_reasons.HostBlocked;
-    if (!options.allow_udp_streams && type === stream_types.UDP)
-      return close_reasons.HostBlocked;
-    
-    //check for stream count limits
-    if (options.stream_limit_total !== -1 && Object.keys(this.streams).length > options.stream_limit_total) 
-      return close_reasons.ConnThrottled;
-    if (options.stream_limit_per_host !== -1) {
-      let streams_per_host = 0;
-      for (let stream of this.streams) {
-        if (stream.socket.hostname === hostname) {
-          streams_per_host++;
-        }
-      }
-      if (streams_per_host > options.stream_limit_per_host)
-        return close_reasons.ConnThrottled;
-    }
-
-    //check the hostname whitelist/blacklist
-    if (options.hostname_whitelist) {
-      let matched = false;
-      for (let regex of options.hostname_whitelist) {
-        if (regex.test(hostname)) {
-          matched = true;
-          break
-        }
-      }
-      if (!matched) 
-        return close_reasons.HostBlocked;
-    }
-    else if (options.hostname_blacklist) {
-      for (let regex of options.hostname_blacklist) {
-        if (regex.test(hostname)) 
-          return close_reasons.HostBlocked;
-      }
-    }
-
-    return 0;
-  }
-
   async create_stream(stream_id, type, hostname, port) {
-    let possible_close_reason = this.is_stream_allowed(type, hostname, port);
+    let possible_close_reason = filter.is_stream_allowed(this, type, hostname, port);
     if (possible_close_reason) {
-      logging.warn(`(${this.conn_id}) refusing to create a stream to ${hostname}`);
+      logging.warn(`(${this.conn_id}) refusing to create a stream to ${hostname}:${port}`);
       let packet = new WispPacket({
         type: ClosePayload.type,
         stream_id: stream_id,
