@@ -1,8 +1,8 @@
 # JavaScript Wisp Client
 
-This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client, written in Javascript for use on the Web.
+This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client, written in Javascript for use in NodeJS and on the Web.
 
-## Javascript Client API:
+## Client API:
 
 ### Importing the Library:
 To use this library on either NodeJS or the browser, import the `wisp.mjs` file. Alternatively, use the `dist/wisp.js` file in the NPM package if you don't want to use an ES6 module.
@@ -58,6 +58,75 @@ ws.addEventListener("message", (event) => {
 ```
 
 The `_wisp_connections` global object will be used to manage the active Wisp connections. This object is able to store multiple active Wisp connections, identified by the websocket URL.
+
+## Server API:
+### Basic Example:
+This example uses the `node:http` module as a basic web server. It accepts new Wisp connections from incoming websockets.
+```js
+import { server as wisp } from "@mercuryworkshop/wisp-js/server";
+import http from "node:http";
+
+const server = http.createServer((req, res) => {
+  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.end("wisp server js rewrite");
+});
+
+server.on("upgrade", (req, socket, head) => {
+  wisp.routeRequest(req, socket, head);
+});
+
+server.on("listening", () => {
+  console.log("HTTP server listening");
+});
+
+server.listen(5001, "127.0.0.1");
+```
+
+### Change the Log Level:
+By default, all info messages are shown. You can change this by importing `logging` from the module, and setting its `level` property to one of the available log levels:
+- `logging.level = logging.DEBUG`
+- `logging.level = logging.INFO` (default)
+- `logging.level = logging.WARN`
+- `logging.level = logging.ERROR`
+- `logging.level = logging.NONE`
+
+```js
+import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
+
+logging.level = logging.DEBUG;
+```
+
+### Changing Server Settings:
+To change settings globally for the Wisp server, you can use the `wisp.options` object. 
+
+The available settings are:
+- `options.hostname_blacklist` - An array of regex objects to match against the destination server. Any matches will be blocked.
+- `options.hostname_whitelist` - Same as `hostname_whitelist`, but only matches will be allowed through, and setting this will supersede `hostname_blacklist`.
+- `options.port_blacklist` - An array of port numbers or ranges to block on the destination server. Specific ports are expressed as a single number, and ranges consist of a two element array containing the start and end. For example `80` or `[3000, 4000]`, are both valid entries in this array.
+- `options.port_whitelist` - Same as `port_whitelist`, but only matches will be allowed through, and setting this will supersede `port_blacklist`.
+- `options.stream_limit_per_host` - The maximum number of streams that may be open to a single hostname, per connection. Defaults to no limit.
+- `options.stream_limit_total` - The total number of streams that may be open to all hosts combined, per connection. Defaults to no limit.
+- `options.allow_udp_streams` - If this is `false`, UDP streams will be blocked. Defaults to `true`.
+- `options.allow_tcp_streams` - If this is `false`, TCP streams will be blocked. Defaults to `true`.
+
+For example:
+```js
+wisp.options.port_whitelist = [
+  [5000, 6000],
+  80,
+  443
+]
+wisp.options.hostname_blacklist = [
+  /google\.com/,
+  /reddit\.com/,
+]
+```
+
+### Migrating from wisp-server-node:
+This is designed to be a drop-in replacement for [wisp-server-node](https://github.com/MercuryWorkshop/wisp-server-node). You can replace your old import with the following, and your application will still work in the same way:
+```js
+import { server as wisp } from "@mercuryworkshop/wisp-js/server";
+```
 
 ## Copyright:
 This library is licensed under the GNU AGPL v3.
