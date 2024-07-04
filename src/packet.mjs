@@ -164,9 +164,7 @@ export class InfoPayload {
   static min_size = 2;
   static type = 0x05;
   static name = "INFO";
-  constructor(
-    { minor_ver, major_ver, extensions }
-  ) {
+  constructor({ minor_ver, major_ver, extensions }) {
     this.minor_ver=minor_ver;
     this.major_ver= major_ver;
     this.extensions= extensions;
@@ -178,12 +176,14 @@ export class InfoPayload {
       let ext_id= buffer.view.getUint8(cursor);
       cursor += 1;
       if (cursor > buffer.size) break;
+
       let payload_length= buffer.view.getUint32(cursor);
       cursor += 4;
-      if (cursor + payload_length > 
-        buffer.size)
+      if (cursor + payload_length > buffer.size)
         break;
-      let ext_buffer= new WispBuffer(payload_length);
+
+      let ext_buffer = new WispBuffer(payload_length);
+
       for (let mini_cursor= 0; mini_cursor < payload_length; mini_cursor++) {
         ext_buffer.bytes[mini_cursor]= buffer.bytes[mini_cursor + cursor];
       }
@@ -199,16 +199,19 @@ export class InfoPayload {
     });
   }
   serialize() {
-    let buffer = new WispBuffer(1 + 1 +
-      this.extensions.reduce((total, value) => 1 + 4 + value.buffer.size, 0)); // minor + major + [(id + payloadlength + payload)...]
-    buffer
-      .view.setUint8(0, 
-      this.major_ver);
-    buffer
-      .view.setUint8(1, this.minor_ver);
+    let buffer_size = 1 + 1; // major + minor
+    for (let ext of this.extensions){
+      buffer_size += 1 + 4 + ext.buffer.size; // id + payloadlength + payload
+    }
+    
+    let buffer = new WispBuffer(buffer_size); // minor + major + [(id + payloadlength + payload)...]
+
+    buffer.view.setUint8(0, this.major_ver);
+    buffer.view.setUint8(1, this.minor_ver);
     let cursor = 2;
-    this.extensions.forEach(
-      ext => {
+
+    for(let ext of this.extensions)
+    {
       buffer.view.setUint8(cursor, ext.ext_id);
       cursor += 1;
       buffer.view.setUint32(cursor, ext.buffer.size);
@@ -217,7 +220,7 @@ export class InfoPayload {
         buffer.bytes[mini_cursor + cursor] = ext.buffer.bytes[mini_cursor];
       }
       cursor += ext.buffer.size;
-    })
+    }
     return buffer;
   }
 }
@@ -240,9 +243,5 @@ export const packet_types = {
   INFO: 0x05
 }
 
-export const extension_types= {
-  UDP: 0x01,
-  PASSWORD_AUTH: 0x02,
-}
 
 
