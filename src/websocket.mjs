@@ -62,6 +62,11 @@ export class AsyncWebSocket {
     }
   }
 
+  close(code, reason) {
+    this.ws.close(code, reason);
+    this.data_queue.close();
+  }
+
   get buffered_amount() {
     return this.ws.bufferedAmount;
   }

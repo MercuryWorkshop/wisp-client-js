@@ -10,7 +10,8 @@ export class WSProxyConnection {
     this.hostname = hostname;
     this.port = parseInt(port);
 
-    if (!filter.is_stream_allowed(null, stream_types.TCP, this.hostname, this.port)) {
+    let err_code = filter.is_stream_allowed(null, stream_types.TCP, this.hostname, this.port);
+    if (err_code !== 0) {
       throw new Error(`Refusing to create a wsproxy connection to ${this.hostname}:${this.port}`);
     }
 
@@ -19,14 +20,15 @@ export class WSProxyConnection {
   }
 
   async setup() {
+    await this.ws.connect();
     await this.socket.connect();
 
     //start the proxy tasks in the background
     this.tcp_to_ws().catch((error) => {
-      logging.warn(`a tcp to ws task (wsproxy) encountered an error - ${error}`);
+      logging.error(`a tcp to ws task (wsproxy) encountered an error - ${error}`);
     });
     this.ws_to_tcp().catch((error) => {
-      logging.warn(`a ws to tcp task (wsproxy) encountered an error - ${error}`);
+      logging.error(`a ws to tcp task (wsproxy) encountered an error - ${error}`);
     });
   }
 
@@ -40,7 +42,7 @@ export class WSProxyConnection {
       await this.ws.send(data);
       this.socket.resume();
     }
-    this.ws.close();
+    await this.ws.close();
   }
 
   async ws_to_tcp() {

@@ -101,8 +101,8 @@ To change settings globally for the Wisp server, you can use the `wisp.options` 
 
 The available settings are:
 - `options.hostname_blacklist` - An array of regex objects to match against the destination server. Any matches will be blocked.
-- `options.hostname_whitelist` - Same as `hostname_whitelist`, but only matches will be allowed through, and setting this will supersede `hostname_blacklist`.
-- `options.port_blacklist` - An array of port numbers or ranges to block on the destination server. Specific ports are expressed as a single number, and ranges consist of a two element array containing the start and end. For example `80` or `[3000, 4000]`, are both valid entries in this array.
+- `options.hostname_whitelist` - Same as `hostname_blacklist`, but only matches will be allowed through, and setting this will supersede `hostname_blacklist`.
+- `options.port_blacklist` - An array of port numbers or ranges to block on the destination server. Specific ports are expressed as a single number, and ranges consist of a two element array containing the start and end. For example `80` and `[3000, 4000]` are both valid entries in this array.
 - `options.port_whitelist` - Same as `port_whitelist`, but only matches will be allowed through, and setting this will supersede `port_blacklist`.
 - `options.stream_limit_per_host` - The maximum number of streams that may be open to a single hostname, per connection. Defaults to no limit.
 - `options.stream_limit_total` - The total number of streams that may be open to all hosts combined, per connection. Defaults to no limit.
@@ -133,7 +133,7 @@ This library is licensed under the GNU AGPL v3.
 
 ### Copyright Notice:
 ```
-wisp-client-js: a Wisp client implementation written in JavaScript
+wisp-js: a Wisp client implementation written in JavaScript
 Copyright (C) 2024 Mercury Workshop
 
 This program is free software: you can redistribute it and/or modify

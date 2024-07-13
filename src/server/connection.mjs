@@ -29,11 +29,11 @@ export class ServerStream {
 
     //start the proxy tasks in the background
     this.tcp_to_ws().catch((error) => {
-      logging.warn(`(${this.conn.conn_id}) a tcp/udp to ws task encountered an error - ${error}`);
+      logging.error(`(${this.conn.conn_id}) a tcp/udp to ws task encountered an error - ${error}`);
       this.close();
     });
     this.ws_to_tcp().catch((error) => {
-      logging.warn(`(${this.conn.conn_id}) a ws to tcp/udp task encountered an error - ${error}`);
+      logging.error(`(${this.conn.conn_id}) a ws to tcp/udp task encountered an error - ${error}`);
       this.close();
     });
   }
