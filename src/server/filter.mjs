@@ -1,6 +1,8 @@
 import { close_reasons } from "../packet.mjs";
 import { options } from "./options.mjs";
 
+export class AccessDeniedError extends Error {}
+
 //helper functions for the whitelist/blacklist logic
 function check_port_range(entry, port) {
   return (entry === port) || (entry[0] <= port && entry[1] >= port)

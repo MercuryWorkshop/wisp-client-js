@@ -12,7 +12,8 @@ export class WSProxyConnection {
 
     let err_code = filter.is_stream_allowed(null, stream_types.TCP, this.hostname, this.port);
     if (err_code !== 0) {
-      throw new Error(`Refusing to create a wsproxy connection to ${this.hostname}:${this.port}`);
+      logging.info(`Refusing to create a wsproxy connection to ${this.hostname}:${this.port}`);
+      throw new filter.AccessDeniedError();
     }
 
     this.socket = new NodeTCPSocket(hostname, port);
