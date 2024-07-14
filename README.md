@@ -82,18 +82,39 @@ server.on("listening", () => {
 server.listen(5001, "127.0.0.1");
 ```
 
+### Example With Express:
+```js
+import { server as wisp } from "@mercuryworkshop/wisp-js/server";
+import express from "express";
+import morgan from "morgan";
+
+const app = express();
+const port = process.env.PORT || 5001;
+
+app.use(morgan("combined"));
+app.use(express.static("./"));
+
+const server = app.listen(port, () => {
+  console.log("Listening on port: ", port)
+});
+
+server.on("upgrade", (request, socket, head) => {
+  wisp.routeRequest(request, socket, head);
+});
+```
+
 ### Change the Log Level:
-By default, all info messages are shown. You can change this by importing `logging` from the module, and setting its `level` property to one of the available log levels:
-- `logging.level = logging.DEBUG`
-- `logging.level = logging.INFO` (default)
-- `logging.level = logging.WARN`
-- `logging.level = logging.ERROR`
-- `logging.level = logging.NONE`
+By default, all info messages are shown. You can change this by importing `logging` from the module, and calling `logging.set_level` to set it to one of the following values:
+- `logging.DEBUG`
+- `logging.INFO` (default)
+- `logging.WARN`
+- `logging.ERROR`
+- `logging.NONE`
 
 ```js
 import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
 
-logging.level = logging.DEBUG;
+logging.set_level(logging.DEBUG);
 ```
 
 ### Changing Server Settings:
