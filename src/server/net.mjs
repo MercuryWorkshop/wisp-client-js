@@ -38,6 +38,7 @@ export class NodeTCPSocket {
     this.recv_buffer_size = 128;
 
     this.socket = null;
+    this.paused = false;
     this.connected = false;
     this.data_queue = new AsyncQueue(this.recv_buffer_size);
   }
@@ -46,6 +47,7 @@ export class NodeTCPSocket {
     let ip = await lookup_ip(this.hostname);
     await new Promise((resolve, reject) => {
       this.socket = new net.Socket();
+      this.socket.setNoDelay(true);
       this.socket.on("connect", () => {
         this.connected = true;
         resolve();
@@ -92,10 +94,15 @@ export class NodeTCPSocket {
   pause() {
     if (this.data_queue.size >= this.data_queue.max_size) {
       this.socket.pause();
+      this.paused = true;
     }
   }
   resume() {
-    this.socket.resume();
+    if (!this.socket) return;
+    if (this.paused) {
+      this.socket.resume();
+      this.paused = false;
+    }
   }
 }
 
