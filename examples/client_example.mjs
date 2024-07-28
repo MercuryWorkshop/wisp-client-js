@@ -1,9 +1,9 @@
 //replace with "@mercuryworkshop/wisp-js/client"
-import { client } from "../src/index.mjs";
+import { client, packet } from "../src/index.mjs";
 const { ClientConnection, WispWebSocket, _wisp_connections } = client;
 
-let ws_url = `ws://localhost:5001/ws/`;
-if (typeof process === "undefined") {
+let ws_url = `ws://localhost:4000/`;
+if (typeof process !== "undefined") {
   ws_url = location.href.replace("http", "ws");
 }
 
@@ -54,5 +54,4 @@ globalThis.WispWebSocket = WispWebSocket;
 globalThis.ws_url = ws_url;
 globalThis.run_demo = run_demo;
 globalThis._wisp_connections = _wisp_connections;
-
-run_demo();
+globalThis.packet = packet; 

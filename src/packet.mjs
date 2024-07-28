@@ -159,19 +159,65 @@ export class ClosePayload {
   }
 }
 
+export class InfoPayload {
+  static min_size = 2;
+  static type = 0x05;
+  static name = "INFO";
+  constructor({ major_version, minor_version, extensions }) {
+    this.major_version = major_version;
+    this.minor_version = minor_version;
+    this.extensions = extensions;
+  }
+  static parse(buffer) {
+    const major_version = buffer.view.getUint8(0);
+    const minor_version = buffer.view.getUint8(1);
+    let offset = 2;
+    let extensions = [];
+    while (buffer.size - offset > 4) {
+      let data_length = buffer.view.getUint32(offset + 1, true);
+      extensions.push({
+        id: buffer.view.getUint8(offset),
+        data: buffer.slice(offset + 1, data_length),
+      });
+      offset += data_length + 5;
+    }
+    return new InfoPayload({
+      major_version,
+      minor_version,
+      extensions,
+    });
+  }
+  serialize() {
+    let buffer = new WispBuffer(2);
+    buffer.view.setUint8(0, this.major_version);
+    buffer.view.setUint8(1, this.minor_version);
+
+    for (const extension of this.extensions) {
+      let extension_buffer = new WispBuffer(5);
+      extension_buffer.view.setUint8(0, extension.id);
+      extension_buffer.view.setUint32(1, extension.data.size);
+      extension_buffer = extension_buffer.concat(extension.data);
+      buffer = buffer.concat(extension_buffer);
+    }
+    return buffer;
+  }
+}
+
 export const packet_classes = [
   undefined,
   ConnectPayload, 
   DataPayload, 
   ContinuePayload, 
-  ClosePayload
+  ClosePayload,
+  InfoPayload
 ]
 
 export const packet_types = {
   CONNECT: 0x01,
   DATA: 0x02,
   CONTINUE: 0x03,
-  CLOSE: 0x04
+  CLOSE: 0x04,
+  INFO: 0x05,
 }
 
 export const stream_types = {
