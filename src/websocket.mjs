@@ -1,16 +1,9 @@
 //async websocket wrapper for both node and the browser
 
-export const RealCloseEvent = (globalThis.CloseEvent || Event);
-
-export let RealWS = globalThis.WebSocket;
-export let RealCrypto = globalThis.crypto;
-if (typeof process !== "undefined") {
-  RealWS = (await import("ws")).WebSocket;
-  RealCrypto = await import("crypto");
-}
+import * as compat from "./compat.mjs";
 
 export function get_conn_id() {
-  return RealCrypto.randomUUID().split("-")[0];
+  return compat.crypto.randomUUID().split("-")[0];
 }
 
 //an async websocket wrapper

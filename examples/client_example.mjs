@@ -1,5 +1,5 @@
 //replace with "@mercuryworkshop/wisp-js/client"
-import { client } from "../src/index.mjs";
+import { client } from "../src/entrypoints/client.mjs";
 const { ClientConnection, WispWebSocket, _wisp_connections } = client;
 
 let ws_url = `ws://localhost:5001/ws/`;

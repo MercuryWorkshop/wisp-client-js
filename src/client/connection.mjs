@@ -1,4 +1,5 @@
-import { RealWS } from "../websocket.mjs";
+import * as compat from "../compat.mjs";
+
 import {
   packet_classes,
   packet_types,
@@ -93,7 +94,7 @@ export class ClientConnection {
   }
 
   connect_ws() {
-    this.ws = new RealWS(this.wisp_url);
+    this.ws = new compat.WebSocket(this.wisp_url);
     this.ws.binaryType = "arraybuffer";
     this.connecting = true;
 

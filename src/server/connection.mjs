@@ -187,7 +187,8 @@ export class ServerConnection {
     }
 
     if (packet.type === ConnectPayload.type) {
-      logging.info(`(${this.conn_id}) opening new stream to ${packet.payload.hostname}:${packet.payload.port}`);
+      let type_info = packet.payload.stream_type === stream_types.TCP ? "TCP" : "UDP";
+      logging.info(`(${this.conn_id}) opening new ${type_info} stream to ${packet.payload.hostname}:${packet.payload.port}`);
       await this.create_stream(
         packet.stream_id, 
         packet.payload.stream_type, 

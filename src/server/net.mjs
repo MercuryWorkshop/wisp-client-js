@@ -1,20 +1,12 @@
 import * as logging from "../logging.mjs";
 import { AsyncQueue } from "../websocket.mjs";
 
+import { net, dgram, dns } from "../compat.mjs";
+
 //wrappers for node networking apis
 //in the browser these can be redefined to allow for custom transports
 
 export const is_node = (typeof process !== "undefined");
-
-export let net = null;
-export let dgram = null;
-export let dns = null;
-
-if (is_node) {
-  net = await import("node:net");
-  dgram = await import("node:dgram");
-  dns = await import("node:dns/promises");
-}
 
 export function assert_on_node() {
   if (!is_node) {

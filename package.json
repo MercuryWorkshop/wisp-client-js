@@ -1,6 +1,6 @@
 {
   "name": "@mercuryworkshop/wisp-js",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "A client and server for the Wisp protocol, written in Javascript",
   "repository": {
     "type": "git",
@@ -18,18 +18,26 @@
     "./client": "./src/entrypoints/client.mjs",
     "./server": "./src/entrypoints/server.mjs"
   },
+  "browser": {
+    ".": "./src/index.mjs",
+    "./client": "./src/entrypoints/client.mjs",
+    "./server": "./src/entrypoints/server.mjs",
+    "./src/compat.mjs": "./src/compat_browser.mjs"
+  },
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "build": "mkdir -p dist; esbuild --bundle --external:ws --platform=neutral src/entrypoints/client.mjs | head -n -4 > dist/wisp.js"
+    "build": "webpack",
+    "build:prod": "webpack --mode=production",
+    "dev": "webpack --watch"
   },
   "dependencies": {
-    "ws": "^8.17.1",
-    "bufferutil": "^4.0.8"
+    "bufferutil": "^4.0.8",
+    "ws": "^8.17.1"
   },
   "devDependencies": {
-    "esbuild": "^0.20.2"
+    "webpack": "^5.94.0"
   }
 }

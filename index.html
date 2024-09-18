@@ -3,7 +3,24 @@
   <head>
     <link rel="icon" href="data:;base64,=">
 
-    <script type="module" src="./examples/example.mjs"></script>
+    <script type="module">
+      import { client as wisp } from "/dist/wisp-client.mjs";
+      console.log(wisp);
+      
+      let ws = new wisp.WispWebSocket("wss://wisp.mercurywork.shop/alicesworld.tech:80");
+      ws.binaryType = "arraybuffer";
+      ws.addEventListener("open", () => {
+        let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
+        ws.send(payload);
+      });
+      ws.addEventListener("message", (event) => {
+        let text = new TextDecoder().decode(event.data);
+        console.log("message from stream 1: ", text);
+      });
+      ws.addEventListener("close", () => {
+        console.log("stream 1 closed");
+      });
+    </script>
   </head>
   <body>
     <p>wisp client</p>

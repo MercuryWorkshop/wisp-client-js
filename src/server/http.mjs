@@ -1,30 +1,25 @@
 import * as logging from "../logging.mjs";
+import * as compat from "../compat.mjs";
+
 import { AccessDeniedError } from "./filter.mjs";
 import { ServerConnection } from "./connection.mjs";
 import { WSProxyConnection } from "./wsproxy.mjs";
 import { is_node, assert_on_node } from "./net.mjs";
 
-let IncomingMessage = null;
-let NodeWebSocket = null;
-let WebSocketServer = null;
-
 let ws_server = null;
 if (is_node) {
-  IncomingMessage = (await import("node:http")).IncomingMessage;
-  NodeWebSocket = (await import("ws")).WebSocket;
-  WebSocketServer = (await import("ws")).WebSocketServer;
-  ws_server = new WebSocketServer({ noServer: true });
+  ws_server = new compat.WebSocketServer({ noServer: true });
 }
 
 export function routeRequest(request, socket, head, options={}) {
   assert_on_node();
 
-  if (request instanceof IncomingMessage) {
+  if (request instanceof compat.http.IncomingMessage) {
     ws_server.handleUpgrade(request, socket, head, (ws) => {
       create_connection(ws, request.url, request, options);
     });
   }
-  else if (request instanceof NodeWebSocket) {
+  else if (request instanceof compat.WebSocket) {
     create_connection(ws, "/", {}), options;
   }
 }
