@@ -1,16 +1,35 @@
 # JavaScript Wisp Client
 
-This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client, written in Javascript for use in NodeJS and on the Web.
+This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client, written in Javascript for use in NodeJS and in the browser.
+
+### Library Entrypoints:
+- `@mercuryworkshop/wisp-js/client` - Only contains the client code.
+- `@mercuryworkshop/wisp-js/server` - Contains the server code, and the logging module.
+- `@mercuryworkshop/wisp-js` - Contains the server, client, and logging code.
+
+All of these entrypoints support being imported as either a CommonJS or ES6 module.
 
 ## Client API:
 
-### Importing the Library:
-To use this library on either NodeJS or the browser, import the `wisp.mjs` file. Alternatively, use the `dist/wisp.js` file in the NPM package if you don't want to use an ES6 module.
+### Importing the Client Library:
+To use the library as an ES6 module, either in Node or using a bundler for the browser, include the following import:
+```js
+import { client as wisp } from "@mercuryworkshop/wisp-js/client";
+```
+
+To use it in Node with CommonJS:
+```js
+const { client: wisp } = require("@mercuryworkshop/wisp-js/client");
+```
+
+If you are not using a bundler, you may import the files in the dist folder of the package. The `wisp-client.mjs` file is an ES6 module that has the same entrypoint as the example above. The `wisp-client.js` file is a regular JS file that produce a global variable named `wisp_client`, which contains all of the exported modules. 
 
 ### Connecting to a Wisp Server:
-You can create a new Wisp connection by creating a new `WispConnection` object. The only argument to the constructor is the URL of the Wisp websocket server. Use the `open` event to know when the Wisp connection is ready.
+You can create a new Wisp connection by creating a new `ClientConnection` object. The only argument to the constructor is the URL of the Wisp websocket server. Use the `open` event to know when the Wisp connection is ready.
 ```js
-let conn = new WispConnection("wss://example.com/wisp/");
+import { client as wisp } from "@mercuryworkshop/wisp-js/client";
+
+let conn = new wisp.ClientConnection("wss://example.com/wisp/");
 conn.onopen = () => {
   console.log("wisp connection is ready!");
 };
@@ -45,7 +64,9 @@ stream.send(new TextEncoder().encode(payload));
 ### Using the WebSocket Polyfill:
 The `polyfill.js` file provides an API similar to the regular [DOM WebSocket API](https://developer.mozilla.org/en-US/docs/Web/API/WebSocket). Instead of creating new `WebSocket` objects, create `WispWebSocket` objects. Make sure the URL ends with the hostname and port you want to connect to. If you have code that uses the older wsproxy protocol, you can use this polyfill to provide Wisp support easily.
 ```js
-let ws = new WispWebSocket("wss://example.com/ws/alicesworld.tech:80");
+import { client as wisp } from "@mercuryworkshop/wisp-js/client";
+
+let ws = new wisp.WispWebSocket("wss://example.com/ws/alicesworld.tech:80");
 ws.binaryType = "arraybuffer";
 ws.addEventListener("open", () => {
   let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
@@ -57,9 +78,23 @@ ws.addEventListener("message", (event) => {
 });
 ```
 
-The `_wisp_connections` global object will be used to manage the active Wisp connections. This object is able to store multiple active Wisp connections, identified by the websocket URL.
+The `wisp_client._wisp_connections` object will be used to manage the active Wisp connections. This object is able to store multiple active Wisp connections, identified by the websocket URL.
 
 ## Server API:
+### Importing the Server Library:
+To use the library as an ES6 module, either in Node or using a bundler for the browser, include the following import:
+```js
+import { server as wisp } from "@mercuryworkshop/wisp-js/server";
+```
+
+To use it in Node with CommonJS:
+```js
+//commonjs example
+const { server: wisp } = require("@mercuryworkshop/wisp-js/client");
+```
+
+This is designed to be a drop-in replacement for [wisp-server-node](https://github.com/MercuryWorkshop/wisp-server-node). You can replace your old import with one of the above examples, and your application will still work in the same way.
+
 ### Basic Example:
 This example uses the `node:http` module as a basic web server. It accepts new Wisp connections from incoming websockets.
 ```js
@@ -141,12 +176,6 @@ wisp.options.hostname_blacklist = [
   /google\.com/,
   /reddit\.com/,
 ]
-```
-
-### Migrating from wisp-server-node:
-This is designed to be a drop-in replacement for [wisp-server-node](https://github.com/MercuryWorkshop/wisp-server-node). You can replace your old import with the following, and your application will still work in the same way:
-```js
-import { server as wisp } from "@mercuryworkshop/wisp-js/server";
 ```
 
 ## Copyright:

@@ -1,6 +1,9 @@
-const stats_options = {
-  orphanModules: true,
-  modulesSpace: Infinity
+const common_options = {
+  mode: "development",
+  stats: {
+    orphanModules: true,
+  },
+  optimization: {mangleExports: false}
 }
 
 const webpack_configs = [
@@ -14,9 +17,7 @@ const webpack_configs = [
         type: "var"
       }
     },
-    mode: "development",
-    stats: stats_options,
-    optimization: {mangleExports: false}
+    ...common_options
   },
   {
     name: "server",
@@ -28,25 +29,55 @@ const webpack_configs = [
         type: "var"
       }
     },
-    mode: "development",
-    stats: stats_options,
-    optimization: {mangleExports: false}
+    ...common_options
+  },
+  {
+    name: "full",
+    entry: "./src/index.mjs",
+    output: {
+      filename: "wisp-full.js",
+      library: {
+        name: "wisp_full",
+        type: "var"
+      }
+    },
+    ...common_options
   }
 ]
 
-//add es6 module output to each webpack configuration object
+//add es6 and commonjs module output to each webpack configuration object
 let new_configs = [];
 for (let config of webpack_configs) {
-  let new_config = Object.fromEntries(Object.entries(config));
-  new_config.name = config.name + "_es6";
-  new_config.experiments = {outputModule: true};
-  new_config.output = {
-    filename: config.output.filename.replace(".js", ".mjs"),
-    library: {
-      type: "module"
+  let es6_config = {
+    ...config,
+    name: config.name + "_es6",
+    experiments: {outputModule: true},
+    output: {
+      filename: config.output.filename.replace(".js", ".mjs"),
+      library: {
+        type: "module"
+      }
     }
   }
-  new_configs.push(new_config)
+
+  let cjs_config = {
+    ...config,
+    name: config.name + "_cjs",
+    target: "node",
+    output: {
+      filename: config.output.filename.replace(".js", ".cjs"),
+      library: {
+        type: "commonjs"
+      }
+    },
+    externals: {
+      "ws": "commonjs ws",
+      "crypto": "commonjs crypto"
+    }
+  }
+
+  new_configs.push(es6_config);
+  new_configs.push(cjs_config);
 }
 
 module.exports = webpack_configs.concat(new_configs);
