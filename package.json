@@ -1,6 +1,6 @@
 {
   "name": "@mercuryworkshop/wisp-js",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A client and server for the Wisp protocol, written in Javascript",
   "repository": {
     "type": "git",
@@ -15,15 +15,15 @@
   "main": "./src/index.mjs",
   "exports": {
     ".": {
-      "import":  "./src/index.mjs",
+      "import": "./src/index.mjs",
       "require": "./dist/wisp-full.cjs"
     },
     "./client": {
-      "import":  "./src/entrypoints/client.mjs",
+      "import": "./src/entrypoints/client.mjs",
       "require": "./dist/wisp-client.cjs"
     },
     "./server": {
-      "import":  "./src/entrypoints/server.mjs",
+      "import": "./src/entrypoints/server.mjs",
       "require": "./dist/wisp-server.cjs"
     }
   },
@@ -40,10 +40,15 @@
   "scripts": {
     "build": "webpack",
     "build:prod": "webpack --mode=production",
-    "dev": "webpack --watch"
+    "dev": "webpack --watch",
+    "server_cli": "node ./src/bin/server_cli.mjs"
+  },
+  "bin": {
+    "wisp-js-server": "src/bin/server_cli.mjs"
   },
   "dependencies": {
     "bufferutil": "^4.0.8",
+    "commander": "^12.1.0",
     "ws": "^8.17.1"
   },
   "devDependencies": {

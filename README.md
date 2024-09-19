@@ -1,6 +1,6 @@
-# JavaScript Wisp Client
+# JavaScript Wisp Implementation
 
-This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client, written in Javascript for use in NodeJS and in the browser.
+This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-protocol) client and server, written in Javascript for use in NodeJS and in the browser.
 
 ### Library Entrypoints:
 - `@mercuryworkshop/wisp-js/client` - Only contains the client code.
@@ -89,7 +89,6 @@ import { server as wisp } from "@mercuryworkshop/wisp-js/server";
 
 To use it in Node with CommonJS:
 ```js
-//commonjs example
 const { server: wisp } = require("@mercuryworkshop/wisp-js/client");
 ```
 
