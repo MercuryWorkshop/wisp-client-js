@@ -17,18 +17,18 @@ const version = package_json.version;
 const program = new Command();
 program
   .name("wisp-js-server")
-  .description("A Wisp server implementation written in Javascript.")
+  .description(`A Wisp server implementation written in Javascript. (v${version})`)
   .version(version);
 
 program
   .option("-H, --host <host>", "The hostname the server will listen on.", "127.0.0.1")
   .option("-P, --port <port>", "The port number to run the server on.", parseInt(process.env.PORT || "5001"))
   .option("-L, --logging <log_level>", "The log level to use. This is either DEBUG, INFO, WARN, ERROR, or NONE.", "INFO")
-  .option("-S, --static <static_dir>", "The directory to serve static files from.", null);
+  .option("-S, --static <static_dir>", "The directory to serve static files from. (optional)", null)
+  .option("-C, --config <config_path>", "The path to your server config file. (optional)", null);
 
 program.parse();
 const opts = program.opts();
-
 
 //set up server settings
 if (["DEBUG", "INFO", "WARN", "ERROR", "NONE"].includes(opts.logging)) {
@@ -45,6 +45,15 @@ if (opts.static) {
   logging.info("Serving static files from: " + opts.static);
 }
 
+if (opts.config) {
+  opts.config = path.resolve(opts.config);
+  logging.info("Using config file: " + opts.config);
+
+  let data = await fs.readFile(opts.config);
+  let config = JSON.parse(data);
+  for (let [key, value] of Object.entries(config))
+    wisp.options[key] = value;
+}
 
 //start the wisp server 
 const mime_types = {
@@ -62,7 +71,8 @@ const mime_types = {
   "pdf": "application/pdf",
   "zip": "application/zip",
   "ttf": "application/x-font-ttf"
-}
+};
+
 const server = http.createServer(async (req, res) => {
   let client_ip = req.socket.address().address;
   logging.info(`HTTP ${req.method} ${req.url} from ${client_ip}`)

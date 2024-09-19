@@ -1,4 +1,4 @@
-import { close_reasons } from "../packet.mjs";
+import { close_reasons, stream_types } from "../packet.mjs";
 import { options } from "./options.mjs";
 
 export class AccessDeniedError extends Error {}

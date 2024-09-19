@@ -9,6 +9,27 @@ This is an implementation of a [Wisp](https://github.com/mercuryWorkshop/wisp-pr
 
 All of these entrypoints support being imported as either a CommonJS or ES6 module.
 
+## Server CLI:
+THere is a CLI interface available for the Wisp server, and it can be used by installing the package with npm, then running:
+```
+$ npx wisp-js-server --help
+Usage: wisp-js-server [options]
+
+A Wisp server implementation written in Javascript. (v0.2.1)
+
+Options:
+  -V, --version               output the version number
+  -H, --host <host>           The hostname the server will listen on. (default: "127.0.0.1")
+  -P, --port <port>           The port number to run the server on. (default: 5001)
+  -L, --logging <log_level>   The log level to use. This is either DEBUG, INFO, WARN, ERROR, or NONE. (default: "INFO")
+  -S, --static <static_dir>   The directory to serve static files from. (optional) (default: null)
+  -C, --config <config_path>  The path to your server config file. (optional) (default: null)
+  -h, --help                  display help for command
+```
+You may also clone this repository and run `npn run server_cli -- --help`.
+
+The config file is a JSON file with the same entries as the [global server config](https://github.com/MercuryWorkshop/wisp-client-js/?tab=readme-ov-file#changing-server-settings) in the API.
+
 ## Client API:
 
 ### Importing the Client Library:
