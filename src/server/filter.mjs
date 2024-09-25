@@ -1,5 +1,8 @@
 import { close_reasons, stream_types } from "../packet.mjs";
 import { options } from "./options.mjs";
+import * as net from "./net.mjs";
+
+import ipaddr from "ipaddr.js";
 
 export class AccessDeniedError extends Error {}
 
@@ -25,8 +28,28 @@ function check_blacklist(entries, filter) {
   return false;
 }
 
+function check_ip_range(ip, range) {
+  return range.includes(ip.range());
+}
+
+//check if an ip is blocked
+export function is_ip_blocked(ip_str) {
+  if (!ipaddr.isValid(ip_str)) 
+    return false;
+  let ip = ipaddr.parse(ip_str);
+
+  let loopback_ranges = ["loopback", "unspecified"];
+  let private_ranges = ["broadcast", "linkLocal", "carrierGradeNat", "private", "reserved"];
+
+  if (!options.allow_loopback_ips && check_ip_range(ip, loopback_ranges)) 
+    return true;
+  if (!options.allow_private_ips && check_ip_range(ip, private_ranges)) 
+    return true;
+  return false;
+}
+
 //returns the close reason if the connection should be blocked
-export function is_stream_allowed(connection, type, hostname, port) {
+export async function is_stream_allowed(connection, type, hostname, port) {
   //check if tcp or udp should be blocked
   if (!options.allow_tcp_streams && type === stream_types.TCP)
     return close_reasons.HostBlocked;
@@ -52,6 +75,21 @@ export function is_stream_allowed(connection, type, hostname, port) {
     if (check_blacklist(options.port_blacklist, (entry) => check_port_range(entry, port)))
       return close_reasons.HostBlocked;
   }
+
+  //check if the destination ip is blocked
+  let ip_str = hostname;
+  if (ipaddr.isValid(hostname)) {
+    if (!options.allow_direct_ip)
+      return close_reasons.HostBlocked;
+  }
+  else {
+    try { //look up the ip to make sure that the resolved address is allowed
+      ip_str = await net.lookup_ip(hostname);
+    }
+    catch {}
+  }
+  if (is_ip_blocked(ip_str)) 
+    return close_reasons.HostBlocked;
 
   //don't check stream counts if there isn't an associated wisp connection (with wsproxy for example)
   if (!connection) 

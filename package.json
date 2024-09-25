@@ -49,6 +49,7 @@
   "dependencies": {
     "bufferutil": "^4.0.8",
     "commander": "^12.1.0",
+    "ipaddr.js": "^2.2.0",
     "ws": "^8.17.1"
   },
   "devDependencies": {

@@ -7,21 +7,24 @@ import { NodeTCPSocket } from "./net.mjs";
 export class WSProxyConnection {
   constructor(ws, path) {
     let [hostname, port] = path.split("/").pop().split(":");
-    this.hostname = hostname;
+    this.hostname = hostname.trim();
     this.port = parseInt(port);
-
-    let err_code = filter.is_stream_allowed(null, stream_types.TCP, this.hostname, this.port);
-    if (err_code !== 0) {
-      logging.info(`Refusing to create a wsproxy connection to ${this.hostname}:${this.port}`);
-      throw new filter.AccessDeniedError();
-    }
-
-    this.socket = new NodeTCPSocket(hostname, port);
     this.ws = new AsyncWebSocket(ws);
   }
 
   async setup() {
     await this.ws.connect();
+
+    //check that the destination host/ip is allowed
+    let err_code = await filter.is_stream_allowed(null, stream_types.TCP, this.hostname, this.port);
+    if (err_code !== 0) {
+      logging.info(`Refusing to create a wsproxy connection to ${this.hostname}:${this.port}`);
+      this.ws.close();
+      throw new filter.AccessDeniedError();
+    }
+
+    //connect to the tcp host after we are certain that it's safe to do so
+    this.socket = new NodeTCPSocket(hostname, port);
     await this.socket.connect();
 
     //start the proxy tasks in the background

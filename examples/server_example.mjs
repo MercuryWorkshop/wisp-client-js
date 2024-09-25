@@ -12,6 +12,8 @@ wisp.options.port_whitelist = [
   80,
   443
 ]
+wisp.options.allow_private_ips = true;
+wisp.options.allow_loopback_ips = true;
 
 server.on("upgrade", (req, socket, head) => {
   wisp.routeRequest(req, socket, head);

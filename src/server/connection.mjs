@@ -139,7 +139,7 @@ export class ServerConnection {
   }
 
   async create_stream(stream_id, type, hostname, port) {
-    let possible_close_reason = filter.is_stream_allowed(this, type, hostname, port);
+    let possible_close_reason = await filter.is_stream_allowed(this, type, hostname, port);
     if (possible_close_reason) {
       logging.warn(`(${this.conn_id}) refusing to create a stream to ${hostname}:${port}`);
       let packet = new WispPacket({
@@ -192,7 +192,7 @@ export class ServerConnection {
       await this.create_stream(
         packet.stream_id, 
         packet.payload.stream_type, 
-        packet.payload.hostname, 
+        packet.payload.hostname.trim(), 
         packet.payload.port
       )
     }
