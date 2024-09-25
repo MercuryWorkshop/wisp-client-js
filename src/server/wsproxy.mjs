@@ -24,7 +24,7 @@ export class WSProxyConnection {
     }
 
     //connect to the tcp host after we are certain that it's safe to do so
-    this.socket = new NodeTCPSocket(hostname, port);
+    this.socket = new NodeTCPSocket(this.hostname, this.port);
     await this.socket.connect();
 
     //start the proxy tasks in the background

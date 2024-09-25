@@ -184,6 +184,9 @@ The available settings are:
 - `options.stream_limit_total` - The total number of streams that may be open to all hosts combined, per connection. Defaults to no limit.
 - `options.allow_udp_streams` - If this is `false`, UDP streams will be blocked. Defaults to `true`.
 - `options.allow_tcp_streams` - If this is `false`, TCP streams will be blocked. Defaults to `true`.
+- `options.allow_direct_ip` - Allow connections directly to IP addresses, which bypasses the server-side DNS resolution. Turning this off allows the server administrator to enforce a block list more effectively. Defaults to `true`.
+- `options.allow_private_ips` - Allow connections to private IP addresses. Defaults to `false`.
+- `options.allow_loopback_ips` - Allow connections to the server's localhost (127.0.0.1) and other loopback IPs. Defaults to `false`.
 
 For example:
 ```js

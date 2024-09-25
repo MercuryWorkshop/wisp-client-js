@@ -8,11 +8,11 @@
       console.log(wisp);
 
       let ws_url = location.href.replace("http", "ws");
-      let ws = new wisp.WispWebSocket(ws_url + "alicesworld.tech:80");
+      let ws = new wisp.WispWebSocket(ws_url + "cloudflare.com:80");
       
       ws.binaryType = "arraybuffer";
       ws.addEventListener("open", () => {
-        let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
+        let payload = "GET /cdn-cgi/trace HTTP/1.1\r\nHost: cloudflare.com\r\nConnection: keepalive\r\n\r\n";
         ws.send(payload);
       });
       ws.addEventListener("message", (event) => {

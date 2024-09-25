@@ -138,46 +138,43 @@ export class ServerConnection {
     }, this.ping_interval * 1000);
   }
 
-  async create_stream(stream_id, type, hostname, port) {
-    let possible_close_reason = await filter.is_stream_allowed(this, type, hostname, port);
-    if (possible_close_reason) {
-      logging.warn(`(${this.conn_id}) refusing to create a stream to ${hostname}:${port}`);
-      let packet = new WispPacket({
-        type: ClosePayload.type,
-        stream_id: stream_id,
-        payload: new ClosePayload({
-          reason: possible_close_reason
-        })
-      });
-      await this.ws.send(packet.serialize().bytes);
-      return;
-    }
-
+  create_stream(stream_id, type, hostname, port) {
     let SocketImpl = type === stream_types.TCP ? this.TCPSocket : this.UDPSocket;
     let socket = new SocketImpl(hostname, port);
     let stream = new ServerStream(stream_id, this, socket);
     this.streams[stream_id] = stream;
 
     //start connecting to the destination server in the background
-    stream.setup().catch((error) => {
-      logging.warn(`(${this.conn_id}) creating a stream to ${hostname}:${port} failed - ${error}`);
-      this.close_stream(stream_id, close_reasons.NetworkError);
-    });
+    (async () => {
+      let close_reason = await filter.is_stream_allowed(this, type, hostname, port);
+      if (close_reason) {
+        logging.warn(`(${this.conn_id}) refusing to create a stream to ${hostname}:${port}`);
+        await this.close_stream(stream_id, close_reason, true);
+        return;
+      }
+      try {
+        await stream.setup();
+      }
+      catch (error) {
+        logging.warn(`(${this.conn_id}) creating a stream to ${hostname}:${port} failed - ${error}`);
+        await this.close_stream(stream_id, close_reasons.NetworkError);
+      }
+    })();
   }
 
-  async close_stream(stream_id, reason = null) {
+  async close_stream(stream_id, reason = null, quiet = false) {
     let stream = this.streams[stream_id];
     if (stream == null) {
       return;
     }
-    if (reason) {
+    if (reason && !quiet) {
       logging.info(`(${this.conn_id}) closing stream to ${stream.socket.hostname} for reason ${reason}`);
     }
     await stream.close(reason);
     delete this.streams[stream_id];
   }
 
-  async route_packet(buffer) {
+  route_packet(buffer) {
     let packet = WispPacket.parse_all(buffer);
     let stream = this.streams[packet.stream_id];
 
@@ -189,7 +186,7 @@ export class ServerConnection {
     if (packet.type === ConnectPayload.type) {
       let type_info = packet.payload.stream_type === stream_types.TCP ? "TCP" : "UDP";
       logging.info(`(${this.conn_id}) opening new ${type_info} stream to ${packet.payload.hostname}:${packet.payload.port}`);
-      await this.create_stream(
+      this.create_stream(
         packet.stream_id, 
         packet.payload.stream_type, 
         packet.payload.hostname.trim(), 
@@ -206,7 +203,7 @@ export class ServerConnection {
     }
 
     else if (packet.type == ClosePayload.type) {
-      await this.close_stream(packet.stream_id, packet.reason);
+      this.close_stream(packet.stream_id, packet.reason);
     }
   }
 
