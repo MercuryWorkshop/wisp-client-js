@@ -7,10 +7,10 @@ if (typeof process === "undefined") {
 }
 
 function run_demo() {
-  let ws = new WispWebSocket(ws_url+"alicesworld.tech:80");
+  let ws = new WispWebSocket(ws_url+"phishing.testcategory.com:80");
   ws.binaryType = "arraybuffer";
   ws.addEventListener("open", () => {
-    let payload = "GET / HTTP/1.1\r\nHost: alicesworld.tech\r\nConnection: keepalive\r\n\r\n";
+    let payload = "GET / HTTP/1.1\r\nHost: phishing.testcategory.com\r\nConnection: keepalive\r\n\r\n";
     ws.send(payload);
   });
   ws.addEventListener("message", (event) => {

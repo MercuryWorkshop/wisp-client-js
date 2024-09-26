@@ -173,20 +173,30 @@ logging.set_level(logging.DEBUG);
 ```
 
 ### Changing Server Settings:
-To change settings globally for the Wisp server, you can use the `wisp.options` object. 
+To change settings globally for the Wisp server, you can use the `wisp.options` object. Here is a list of all of the available settings:
 
-The available settings are:
+**Blacklist / Whitelist Options:**
 - `options.hostname_blacklist` - An array of regex objects to match against the destination server. Any matches will be blocked.
 - `options.hostname_whitelist` - Same as `hostname_blacklist`, but only matches will be allowed through, and setting this will supersede `hostname_blacklist`.
 - `options.port_blacklist` - An array of port numbers or ranges to block on the destination server. Specific ports are expressed as a single number, and ranges consist of a two element array containing the start and end. For example `80` and `[3000, 4000]` are both valid entries in this array.
 - `options.port_whitelist` - Same as `port_whitelist`, but only matches will be allowed through, and setting this will supersede `port_blacklist`.
+
+**Stream Restrictions:**
 - `options.stream_limit_per_host` - The maximum number of streams that may be open to a single hostname, per connection. Defaults to no limit.
 - `options.stream_limit_total` - The total number of streams that may be open to all hosts combined, per connection. Defaults to no limit.
 - `options.allow_udp_streams` - If this is `false`, UDP streams will be blocked. Defaults to `true`.
 - `options.allow_tcp_streams` - If this is `false`, TCP streams will be blocked. Defaults to `true`.
+
+**IP Restrictions:**
 - `options.allow_direct_ip` - Allow connections directly to IP addresses, which bypasses the server-side DNS resolution. Turning this off allows the server administrator to enforce a block list more effectively. Defaults to `true`.
 - `options.allow_private_ips` - Allow connections to private IP addresses. Defaults to `false`.
 - `options.allow_loopback_ips` - Allow connections to the server's localhost (127.0.0.1) and other loopback IPs. Defaults to `false`.
+
+**DNS Settings:**
+- `options.dns_ttl` - The time to live for cached DNS responses, in seconds. Defaults to `120` seconds.
+- `options.dns_method` - The method to use for DNS resolution. This is either `"lookup"`, which uses the system DNS, or `"resolve"`, which uses the Node `dns.resolve` functions. This may also be a custom async function, which takes the hostname as its only argument and returns the resolved IP address. Defaults to `"lookup"`.
+- `options.dns_servers` - A [list of strings containing IP addresses](https://nodejs.org/api/dns.html#dnspromisessetserversservers) for custom DNS servers. This is only used if `dns_method` is set to `"resolve"`. By default, this is unset, and DNS queries will use the system DNS servers.
+- `options.dns_result_order` - Controls whether or not IPv4 or IPv6 addresses are prioritized. This can be either `"ipv4first"`, `"ipv6first"`, or `"verbatim"`. `"verbatim"` uses the original order that the system DNS returns the results in, and only has special meaning if the DNS method is `"lookup"`. If the DNS method is `"resolve"`, `"verbatim"` is treated the same as `"ipv6first"`. Defaults to `"verbatim"`.
 
 For example:
 ```js
@@ -199,6 +209,11 @@ wisp.options.hostname_blacklist = [
   /google\.com/,
   /reddit\.com/,
 ]
+```
+```js
+wisp.options.dns_method = "resolve";
+wisp.options.dns_servers = ["1.1.1.3", "1.0.0.3"];
+wisp.options.dns_result_order = "ipv4first";
 ```
 
 ## Copyright:
