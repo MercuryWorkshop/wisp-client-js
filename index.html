@@ -7,6 +7,7 @@
       import { client as wisp } from "/dist/wisp-client.mjs";
       console.log(wisp);
 
+      let start = performance.now();
       let ws_url = location.href.replace("http", "ws");
       let ws = new wisp.WispWebSocket(ws_url + "cloudflare.com:80");
       
@@ -17,7 +18,9 @@
       });
       ws.addEventListener("message", (event) => {
         let text = new TextDecoder().decode(event.data);
-        console.log("message from stream 1: ", text);
+        let end = performance.now();
+        let diff = Math.round((end - start) * 100) / 100;
+        console.log(`${diff}ms later - message from stream 1: `, text);
       });
       ws.addEventListener("close", () => {
         console.log("stream 1 closed");

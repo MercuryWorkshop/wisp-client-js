@@ -15,16 +15,20 @@ THere is a CLI interface available for the Wisp server, and it can be used by in
 $ npx wisp-js-server --help
 Usage: wisp-js-server [options]
 
-A Wisp server implementation written in Javascript. (v0.2.1)
+A Wisp server implementation written in Javascript. (v0.3.1)
 
 Options:
-  -V, --version               output the version number
-  -H, --host <host>           The hostname the server will listen on. (default: "127.0.0.1")
-  -P, --port <port>           The port number to run the server on. (default: 5001)
-  -L, --logging <log_level>   The log level to use. This is either DEBUG, INFO, WARN, ERROR, or NONE. (default: "INFO")
-  -S, --static <static_dir>   The directory to serve static files from. (optional) (default: null)
-  -C, --config <config_path>  The path to your server config file. (optional) (default: null)
-  -h, --help                  display help for command
+  -V, --version                 output the version number
+  -H, --host <host>             The hostname the server will listen on. (default: "127.0.0.1")
+  -P, --port <port>             The port number to run the server on. (default: 5001)
+  -L, --logging <log_level>     The log level to use. This is either DEBUG, INFO, WARN, ERROR, or
+                                NONE. (default: "INFO")
+  -S, --static <static_dir>     The directory to serve static files from. (optional)
+  -C, --config <config_path>    The path to your Wisp server config file. This is the same format as
+                                `wisp.options` in the API. (optional)
+  -O, --options <options_json>  A JSON string to set the Wisp config without using a file.
+                                (optional)
+  -h, --help                    display help for command
 ```
 You may also clone this repository and run `npn run server_cli -- --help`.
 

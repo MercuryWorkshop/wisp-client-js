@@ -24,13 +24,15 @@ program
   .option("-H, --host <host>", "The hostname the server will listen on.", "127.0.0.1")
   .option("-P, --port <port>", "The port number to run the server on.", parseInt(process.env.PORT || "5001"))
   .option("-L, --logging <log_level>", "The log level to use. This is either DEBUG, INFO, WARN, ERROR, or NONE.", "INFO")
-  .option("-S, --static <static_dir>", "The directory to serve static files from. (optional)", null)
-  .option("-C, --config <config_path>", "The path to your server config file. (optional)", null);
+  .option("-S, --static <static_dir>", "The directory to serve static files from. (optional)")
+  .option("-C, --config <config_path>", "The path to your Wisp server config file. This is the same format as `wisp.options` in the API. (optional)")
+  .option("-O, --options <options_json>", "A JSON string to set the Wisp config without using a file. (optional)");
 
 program.parse();
 const opts = program.opts();
 
 //set up server settings
+opts.logging = opts.logging.toUpperCase();
 if (["DEBUG", "INFO", "WARN", "ERROR", "NONE"].includes(opts.logging)) {
   logging.set_level(logging[opts.logging]);
 }
@@ -52,6 +54,12 @@ if (opts.config) {
   let data = await fs.readFile(opts.config);
   let config = JSON.parse(data);
   for (let [key, value] of Object.entries(config))
+    wisp.options[key] = value;
+}
+
+if (opts.options) {
+  opts.options = JSON.parse(opts.options);
+  for  (let [key, value] of Object.entries(opts.options))
     wisp.options[key] = value;
 }
 
