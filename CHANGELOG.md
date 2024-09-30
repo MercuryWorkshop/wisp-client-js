@@ -1,3 +1,6 @@
+## v0.3.2 (9/30/24):
+- Added support for getting the client's real IP from the `X-Forwarded-For` and the `X-Real-IP` headers
+
 ## v0.3.1 (9/27/24):
 - Add an option to the server CLI for setting the config based on a JSON string
 

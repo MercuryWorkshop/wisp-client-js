@@ -72,7 +72,11 @@ for (let config of webpack_configs) {
     },
     externals: {
       "ws": "commonjs ws",
-      "crypto": "commonjs crypto"
+      "crypto": "commonjs crypto",
+      "ipaddr.js": "commonjs ipaddr.js"
+    },
+    optimization: {
+      minimize: false
     }
   }
 

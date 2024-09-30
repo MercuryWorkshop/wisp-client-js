@@ -83,7 +83,8 @@ const mime_types = {
 
 const server = http.createServer(async (req, res) => {
   let client_ip = req.socket.address().address;
-  logging.info(`HTTP ${req.method} ${req.url} from ${client_ip}`)
+  let real_ip = wisp.parse_real_ip(req.headers, client_ip);
+  logging.info(`HTTP ${req.method} ${req.url} from ${real_ip}`)
 
   if (!opts.static) {
     res.writeHead(200, { "Content-Type": "text/plain" });

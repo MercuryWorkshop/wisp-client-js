@@ -195,6 +195,8 @@ To change settings globally for the Wisp server, you can use the `wisp.options` 
 - `options.allow_direct_ip` - Allow connections directly to IP addresses, which bypasses the server-side DNS resolution. Turning this off allows the server administrator to enforce a block list more effectively. Defaults to `true`.
 - `options.allow_private_ips` - Allow connections to private IP addresses. Defaults to `false`.
 - `options.allow_loopback_ips` - Allow connections to the server's localhost (127.0.0.1) and other loopback IPs. Defaults to `false`.
+- `options.parse_real_ip` - Parse the client's real IP from the `X-Forwarded-For` and `X-Real-IP` headers. Defaults to `true`. 
+- `options.parse_real_ip_from` - A list of IP addresses to allow parsing the real IP from. Defaults to `["127.0.0.1"]`.
 
 **DNS Settings:**
 - `options.dns_ttl` - The time to live for cached DNS responses, in seconds. Defaults to `120` seconds.
