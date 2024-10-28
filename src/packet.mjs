@@ -154,7 +154,7 @@ export class ClosePayload {
   }
   serialize() {
     let buffer = new WispBuffer(1);
-    buffer.view.setUint8(0, this.buffer_remaining);
+    buffer.view.setUint8(0, this.reason);
     return buffer;
   }
 }
