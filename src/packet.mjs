@@ -39,6 +39,10 @@ export class WispBuffer {
     let bytes_slice = this.bytes.slice(index, size);
     return new WispBuffer(bytes_slice);
   }
+
+  get_string() {
+    return text_decoder.decode(this.bytes);
+  }
 }
 
 export class WispPacket {
@@ -159,6 +163,30 @@ export class ClosePayload {
   }
 }
 
+export class InfoPayload {
+  static min_size = 2;
+  static type = 0x05;
+  static name = "INFO";
+  constructor({major_ver, minor_ver, extensions}) {
+    this.major_ver = major_ver;
+    this.minor_ver = minor_ver;
+    this.extensions = extensions;
+  }
+  static parse(buffer) {
+    return new InfoPayload({
+      major_ver: buffer.view.getUint8(0),
+      minor_ver: buffer.view.getUint8(1),
+      extensions: buffer.slice(2)
+    });
+  }
+  serialize() {
+    let buffer = new WispBuffer(2);
+    buffer.view.setUint8(0, this.major_ver);
+    buffer.view.setUint8(1, this.minor_ver);
+    return buffer.concat(this.extensions);
+  }
+}
+
 export const packet_classes = [
   undefined,
   ConnectPayload, 
@@ -171,7 +199,8 @@ export const packet_types = {
   CONNECT: 0x01,
   DATA: 0x02,
   CONTINUE: 0x03,
-  CLOSE: 0x04
+  CLOSE: 0x04,
+  INFO: 0x05
 }
 
 export const stream_types = {

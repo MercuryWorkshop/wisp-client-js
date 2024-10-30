@@ -1,5 +1,5 @@
 ## v0.3.3 (10/27/24):
-- Fix improper serialization of CONTINUE packets
+- Fix improper serialization of CLOSE packets
 
 ## v0.3.2 (9/30/24):
 - Added support for getting the client's real IP from the `X-Forwarded-For` and the `X-Real-IP` headers
