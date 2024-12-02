@@ -1,6 +1,7 @@
 //async websocket wrapper for both node and the browser
 
 import * as compat from "./compat.mjs";
+import { WispPacket } from "./packet.mjs";
 
 export function get_conn_id() {
   return compat.crypto.randomUUID().split("-")[0];
@@ -41,6 +42,10 @@ export class AsyncWebSocket {
   }
 
   async send(data) {
+    if (data instanceof WispPacket) {
+      data = data.serialize().bytes
+    }
+
     this.ws.send(data);
     if (this.ws.bufferedAmount <= this.send_buffer_size) {
       return;

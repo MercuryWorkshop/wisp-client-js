@@ -24,16 +24,20 @@ export function parse_real_ip(headers, client_ip) {
   return client_ip;
 }
 
-export function routeRequest(request, socket, head, options={}) {
+export function routeRequest(request, socket, head, conn_options={}) {
   assert_on_node();
+  if (request.headers["sec-websocket-protocol"] && options.wisp_version === 2)
+    conn_options.wisp_version = 2;
+  else 
+    conn_options.wisp_version = 1;
 
   if (request instanceof compat.http.IncomingMessage) {
     ws_server.handleUpgrade(request, socket, head, (ws) => {
-      create_connection(ws, request.url, request, options);
+      create_connection(ws, request.url, request, conn_options);
     });
   }
   else if (request instanceof compat.WebSocket) {
-    create_connection(ws, "/", {}), options;
+    create_connection(ws, "/", {}), conn_options;
   }
 }
 

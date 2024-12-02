@@ -14,7 +14,7 @@ let resolver = null;
 
 export function assert_on_node() {
   if (!is_node) {
-    throw "not running on node.js";
+    throw new Error("not running on node.js");
   }
 }
 
@@ -37,7 +37,7 @@ async function resolve_with_fallback(resolve_first, resolve_after, hostname) {
 
 //a wrapper for the actual dns lookup
 async function perform_lookup(hostname) {
-  //resolve using dns.resolve4 / dns.resolve6, which bypasses the system dns
+  //resolve using system dns
   if (options.dns_method === "lookup") {
     let result = await dns.lookup(hostname, {order: options.dns_result_order}); 
     return result.address;

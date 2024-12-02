@@ -4,7 +4,7 @@ import http from "node:http";
 import path from "node:path";
 import { promises as fs } from "fs";
 
-import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
+import { server as wisp, logging, extensions } from "@mercuryworkshop/wisp-js/server";
 import { createRequire } from "module";
 import { Command } from "commander";
 
@@ -26,7 +26,7 @@ program
   .option("-L, --logging <log_level>", "The log level to use. This is either DEBUG, INFO, WARN, ERROR, or NONE.", "INFO")
   .option("-S, --static <static_dir>", "The directory to serve static files from. (optional)")
   .option("-C, --config <config_path>", "The path to your Wisp server config file. This is the same format as `wisp.options` in the API. (optional)")
-  .option("-O, --options <options_json>", "A JSON string to set the Wisp config without using a file. (optional)");
+  .option("-O, --options <options_json>", "A JSON string to set the Wisp config without using a file. (optional)")
 
 program.parse();
 const opts = program.opts();
@@ -88,7 +88,7 @@ const server = http.createServer(async (req, res) => {
 
   if (!opts.static) {
     res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("wisp-js-server is running");
+    res.end(`wisp-js-server v${version} is running`);
     return  
   }
 

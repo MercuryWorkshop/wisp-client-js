@@ -9,9 +9,12 @@ import {
   ClosePayload,
   ConnectPayload,
   DataPayload,
+  InfoPayload,
   stream_types,
   close_reasons
 } from "../packet.mjs";
+import { options } from "./options.mjs";
+import { MOTDExtension, UDPExtension, serialize_extensions } from "../extensions.mjs";
 
 export class ServerStream {
   static buffer_size = 128;
@@ -53,7 +56,7 @@ export class ServerStream {
           data: new WispBuffer(new Uint8Array(data))
         })
       });
-      await this.conn.ws.send(packet.serialize().bytes);
+      await this.conn.ws.send(packet);
       this.socket.resume();
     }
     await this.conn.close_stream(this.stream_id, close_reasons.Voluntary);
@@ -78,7 +81,7 @@ export class ServerStream {
           buffer_remaining: ServerStream.buffer_size - this.send_buffer.size
         })
       });
-      this.conn.ws.send(packet.serialize().bytes);
+      this.conn.ws.send(packet);
     }
     await this.close();
   }
@@ -95,7 +98,7 @@ export class ServerStream {
         reason: reason
       })
     });
-    await this.conn.ws.send(packet.serialize().bytes);
+    await this.conn.ws.send(packet);
   }
 
   async put_data(data) {
@@ -104,30 +107,63 @@ export class ServerStream {
 }
 
 export class ServerConnection {
-  constructor(ws, path, {TCPSocket, UDPSocket, ping_interval} = {}) {
+  constructor(ws, path, {TCPSocket, UDPSocket, ping_interval, wisp_version, wisp_extensions} = {}) {
     this.ws = new AsyncWebSocket(ws);
     this.path = path;
     this.TCPSocket = TCPSocket || NodeTCPSocket;
     this.UDPSocket = UDPSocket || NodeUDPSocket;
     this.ping_interval = ping_interval || 30;
+    this.wisp_version = wisp_version || options.wisp_version;
+    this.wisp_extensions = wisp_extensions || null;
     
     this.ping_task = null;
     this.streams = {};
     this.conn_id = get_conn_id();
+
+    if (this.wisp_version == 2 && this.wisp_extensions === null) {
+      this.add_extensions();
+    }
+  }
+
+  add_extensions() {
+    this.wisp_extensions = [];
+    if (options.allow_udp_streams) 
+      this.wisp_extensions.push(new UDPExtension({server_config: {}}));
+    if (options.wisp_motd)
+      this.wisp_extensions.push(new MOTDExtension({server_config: {
+        message: options.wisp_motd
+      }}));
   }
 
   async setup() {
     logging.info(`setting up new wisp connection with id ${this.conn_id}`);
 
     await this.ws.connect();
-    let packet = new WispPacket({
+
+    //send initial info packet for wisp v2
+    if (this.wisp_version == 2) {
+      let ext_buffer = serialize_extensions(this.wisp_extensions);
+      let info_packet = new WispPacket({
+        type: InfoPayload.type,
+        stream_id: 0,
+        payload: new InfoPayload({
+          major_ver: this.wisp_version,
+          minor_ver: 0,
+          extensions: ext_buffer
+        })
+      });
+      this.ws.send(info_packet);
+    }
+
+    //send initial continue packet
+    let continue_packet = new WispPacket({
       type: ContinuePayload.type,
       stream_id: 0,
       payload: new ContinuePayload({
         buffer_remaining: ServerStream.buffer_size
       })
     });
-    await this.ws.send(packet.serialize().bytes);
+    this.ws.send(continue_packet);
 
     if (typeof this.ws.ws.ping !== "function") {
       return;  

@@ -187,13 +187,13 @@ export class InfoPayload {
   }
 }
 
-export const packet_classes = [
-  undefined,
-  ConnectPayload, 
-  DataPayload, 
-  ContinuePayload, 
-  ClosePayload
-]
+export const packet_classes = {
+  0x01: ConnectPayload, 
+  0x02: DataPayload, 
+  0x03: ContinuePayload, 
+  0x04: ClosePayload,
+  0x05: InfoPayload
+}
 
 export const packet_types = {
   CONNECT: 0x01,
@@ -213,6 +213,7 @@ export const close_reasons = {
   Unknown: 0x01,
   Voluntary: 0x02,
   NetworkError: 0x03,
+  IncompatibleExtensions: 0x04,
 
   //server only close reasons
   InvalidInfo: 0x41, 
@@ -224,5 +225,10 @@ export const close_reasons = {
   ConnThrottled: 0x49,
 
   //client only close reasons
-  ClientError: 0x81
+  ClientError: 0x81,
+
+  //extension specific close reasons
+  AuthBadPassword: 0xc0,
+  AuthBadSignature: 0xc1,
+  AuthMissingCredentials: 0xc2
 }

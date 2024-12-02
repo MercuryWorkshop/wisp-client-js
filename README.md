@@ -210,11 +210,11 @@ wisp.options.port_whitelist = [
   [5000, 6000],
   80,
   443
-]
+];
 wisp.options.hostname_blacklist = [
   /google\.com/,
   /reddit\.com/,
-]
+];
 ```
 ```js
 wisp.options.dns_method = "resolve";
