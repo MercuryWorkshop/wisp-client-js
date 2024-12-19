@@ -61,7 +61,7 @@ class ClientStream {
     if (!this.open) return;
     let packet = new WispPacket({
       type: packet_types.CLOSE,
-      stream_id: stream_id,
+      stream_id: this.stream_id,
       payload: new ClosePayload({
         reason: reason
       })
