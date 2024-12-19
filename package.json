@@ -41,7 +41,8 @@
     "build": "webpack",
     "build:prod": "webpack --mode=production",
     "dev": "webpack --watch",
-    "server_cli": "node ./src/bin/server_cli.mjs"
+    "server_cli": "node ./src/bin/server_cli.mjs",
+    "prepack": "npm run build:prod"
   },
   "bin": {
     "wisp-js-server": "src/bin/server_cli.mjs"
@@ -53,6 +54,7 @@
     "ws": "^8.17.1"
   },
   "devDependencies": {
-    "webpack": "^5.94.0"
+    "webpack": "^5.97.1",
+    "webpack-cli": "^5.1.4"
   }
 }
