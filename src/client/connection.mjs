@@ -173,7 +173,7 @@ export class ClientConnection {
     }
 
     else if (packet.type === packet_types.CONTINUE) { //other CONTINUE packets
-      stream.continue_received(packet.payload.buffer_size);
+      stream.continue_received(packet.payload.buffer_remaining);
     }
 
     else if (packet.type === packet_types.CLOSE) { //CLOSE packets
