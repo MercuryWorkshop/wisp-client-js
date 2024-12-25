@@ -129,8 +129,9 @@ export class ClientConnection {
     }
   }
 
-  create_stream(hostname, port, type="tcp") {
-    let stream_type = type === "udp" ? 0x02 : 0x01;
+  create_stream(hostname, port, type=0x01) {
+    let stream_type = type;
+    if (typeof stream_type === "string") stream_type = type === "udp" ? 0x02 : 0x01;
     let stream_id = this.next_stream_id++;
     let stream = new ClientStream(hostname, port, this.ws, this.max_buffer_size, stream_id, this, stream_type);
     this.active_streams[stream_id] = stream;
