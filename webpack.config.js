@@ -48,6 +48,28 @@ const webpack_configs = [
 //add es6 and commonjs module output to each webpack configuration object
 let new_configs = [];
 for (let config of webpack_configs) {
+  let legacy_config = {
+    ...config,
+    name: config.name + "_legacy",
+    module: {
+      rules: [
+        {
+          use: {
+            loader: "babel-loader",
+            options: {
+              targets: "Chrome >= 64, Firefox >= 65, Safari >= 14",
+              presets: ["@babel/preset-env"]
+            }
+          }
+        }
+      ]
+    },
+  }
+  legacy_config.output = {
+    ...legacy_config.output,
+    filename: config.output.filename.replace(".js", "-legacy.js"),
+  }
+
   let es6_config = {
     ...config,
     name: config.name + "_es6",
@@ -80,8 +102,9 @@ for (let config of webpack_configs) {
     }
   }
 
+  new_configs.push(legacy_config);
   new_configs.push(es6_config);
   new_configs.push(cjs_config);
 }
 
-module.exports = webpack_configs.concat(new_configs);
+module.exports = webpack_configs.concat(new_configs);;

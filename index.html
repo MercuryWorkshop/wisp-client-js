@@ -2,10 +2,9 @@
 <html>
   <head>
     <link rel="icon" href="data:;base64,=">
-
-    <script type="module">
-      import { client as wisp } from "/dist/wisp-client.mjs";
-      console.log(wisp);
+    <script src="/dist/wisp-client-legacy.js"></script>
+    <script>
+      const wisp = wisp_client.client;
 
       let start = performance.now();
       let ws_url = location.href.replace("http", "ws");
