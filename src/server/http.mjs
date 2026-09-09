@@ -3,32 +3,29 @@ import * as compat from "../compat.mjs";
 
 import { options } from "./options.mjs";
 import { AccessDeniedError } from "./filter.mjs";
-import { ServerConnection, HandshakeError } from "./connection.mjs";
+import { HandshakeError, ServerConnection } from "./connection.mjs";
 import { WSProxyConnection } from "./wsproxy.mjs";
-import { is_node, assert_on_node } from "./net.mjs";
+import { assert_on_node, is_node } from "./net.mjs";
 
 let ws_server = null;
-if (is_node) {
-  ws_server = new compat.WebSocketServer({ noServer: true });
-}
+if (is_node)
+  ws_server = new compat.WebSocketServer({noServer: true});
 
 export function parse_real_ip(headers, client_ip) {
   if (options.parse_real_ip && options.parse_real_ip_from.includes(client_ip)) {
-    if (headers["x-forwarded-for"]) {
+    if (headers["x-forwarded-for"])
       return headers["x-forwarded-for"].split(",")[0].trim();
-    }
-    else if (headers["x-real-ip"]) {
+    else if (headers["x-real-ip"])
       return headers["x-real-ip"];
-    }
   }
   return client_ip;
 }
 
-export function routeRequest(request, socket, head, conn_options={}) {
+export function routeRequest(request, socket, head, conn_options = {}) {
   assert_on_node();
   if (request.headers["sec-websocket-protocol"] && options.wisp_version === 2)
     conn_options.wisp_version = 2;
-  else 
+  else
     conn_options.wisp_version = 1;
 
   if (request instanceof compat.http.IncomingMessage) {
@@ -47,20 +44,18 @@ async function create_connection(ws, path, request, conn_options) {
   let real_ip = parse_real_ip(request.headers, client_ip);
   let origin = request.headers["origin"];
   logging.info(`new connection on ${path} from ${real_ip} (origin: ${origin})`);
-  
+
   try {
     if (path.endsWith("/")) {
       let wisp_conn = new ServerConnection(ws, path, conn_options);
       await wisp_conn.setup();
       await wisp_conn.run();
     }
-  
     else {
       let wsproxy = new WSProxyConnection(ws, path, conn_options);
       await wsproxy.setup();
     }
   }
-
   catch (error) {
     ws.close();
     if (error instanceof HandshakeError) return;

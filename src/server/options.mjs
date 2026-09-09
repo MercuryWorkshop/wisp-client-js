@@ -7,7 +7,7 @@ export const options = {
   allow_direct_ip: true,
   allow_private_ips: false,
   allow_loopback_ips: false,
-  
+
   //client connection restrictions
   client_ip_blacklist: null, //not implemented!
   client_ip_whitelist: null, //not implemented!
@@ -29,5 +29,4 @@ export const options = {
   //wisp v2 options
   wisp_version: 2,
   wisp_motd: null
-}
-
+};

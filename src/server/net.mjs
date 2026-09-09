@@ -1,21 +1,20 @@
 import * as logging from "../logging.mjs";
 import { AsyncQueue } from "../websocket.mjs";
 import { options } from "./options.mjs";
-import { net, dgram, dns } from "../compat.mjs";
+import { dgram, dns, net } from "../compat.mjs";
 
 //wrappers for node networking apis
 //in the browser these can be redefined to allow for custom transports
 
-export const is_node = (typeof process !== "undefined");
+export const is_node = typeof process !== "undefined";
 
 const dns_cache = new Map();
 let dns_servers = null;
 let resolver = null;
 
 export function assert_on_node() {
-  if (!is_node) {
+  if (!is_node)
     throw new Error("not running on node.js");
-  }
 }
 
 //wrapper for node resolver methods
@@ -33,16 +32,15 @@ async function resolve_with_fallback(resolve_first, resolve_after, hostname) {
   catch {
     return (await resolve_after(hostname))[0];
   }
-}  
+}
 
 //a wrapper for the actual dns lookup
 async function perform_lookup(hostname) {
   //resolve using system dns
   if (options.dns_method === "lookup") {
-    let result = await dns.lookup(hostname, {order: options.dns_result_order}); 
+    let result = await dns.lookup(hostname, {order: options.dns_result_order});
     return result.address;
   }
-
   //resolve using dns.resolve4 / dns.resolve6, which bypasses the system dns
   else if (options.dns_method === "resolve") {
     //we need to make a new resolver at first run because setServers doesn't work otherwise
@@ -55,14 +53,16 @@ async function perform_lookup(hostname) {
       dns_servers = options.dns_servers;
     }
 
-    if (options.dns_result_order === "verbatim" || options.dns_result_order === "ipv6first") 
+    if (options.dns_result_order === "verbatim" || options.dns_result_order === "ipv6first")
       return await resolve_with_fallback(resolve6, resolve4, hostname);
     else if (options.dns_result_order === "ipv4first")
       return await resolve_with_fallback(resolve4, resolve6, hostname);
-    else
-      throw new Error("Invalid result order. options.dns_result_order must be either 'ipv6first', 'ipv4first', or 'verbatim'.");
+    else {
+      throw new Error(
+        "Invalid result order. options.dns_result_order must be either 'ipv6first', 'ipv4first', or 'verbatim'."
+      );
+    }
   }
-
   //use a custom function for dns resolution
   else if (typeof options.dns_method === "function") {
     return await options.dns_method(hostname);
@@ -73,29 +73,26 @@ async function perform_lookup(hostname) {
 
 //perform a dns lookup and use the cache
 export async function lookup_ip(hostname) {
-  if (!is_node) { //we cannot do the dns lookup on the browser
+  if (!is_node) //we cannot do the dns lookup on the browser
     return hostname;
-  }
 
   let ip_level = net.isIP(hostname);
-  if (ip_level === 4 || ip_level === 6) {
+  if (ip_level === 4 || ip_level === 6)
     return hostname; //hostname is already an ip address
-  }
 
   //remove stale entries from the cache
   let now = Date.now();
   for (let [entry_hostname, cache_entry] of dns_cache) {
     let ttl = now - cache_entry.time;
-    if (ttl > options.dns_ttl) {
+    if (ttl > options.dns_ttl)
       dns_cache.delete(entry_hostname);
-    }
   }
 
   //look in the cache first before using the system resolver
   let cache_entry = dns_cache.get(hostname);
   if (cache_entry) {
-    if (cache_entry.error) 
-      throw cache_entry.error
+    if (cache_entry.error)
+      throw cache_entry.error;
     return cache_entry.address;
   }
 

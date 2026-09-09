@@ -40,4 +40,3 @@ export function error(...messages) {
   if (log_level > ERROR) return;
   console.error(get_timestamp() + " error:", ...messages);
 }
-

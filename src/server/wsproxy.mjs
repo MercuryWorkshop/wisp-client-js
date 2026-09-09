@@ -39,9 +39,8 @@ export class WSProxyConnection {
   async tcp_to_ws() {
     while (true) {
       let data = await this.socket.recv();
-      if (data == null) {
+      if (data == null)
         break;
-      }
       this.socket.pause();
       await this.ws.send(data);
       this.socket.resume();
@@ -53,9 +52,8 @@ export class WSProxyConnection {
     while (true) {
       let data;
       data = await this.ws.recv();
-      if (data == null) {
+      if (data == null)
         break; //websocket closed
-      }
       await this.socket.send(data);
     }
     await this.socket.close();

@@ -1,11 +1,11 @@
 const common_options = {
   mode: "development",
   stats: {
-    orphanModules: true,
+    orphanModules: true
   },
   devtool: "source-map",
   optimization: {mangleExports: false}
-}
+};
 
 const webpack_configs = [
   {
@@ -44,7 +44,7 @@ const webpack_configs = [
     },
     ...common_options
   }
-]
+];
 
 //add es6 and commonjs module output to each webpack configuration object
 let new_configs = [];
@@ -64,12 +64,12 @@ for (let config of webpack_configs) {
           }
         }
       ]
-    },
-  }
+    }
+  };
   legacy_config.output = {
     ...legacy_config.output,
-    filename: config.output.filename.replace(".js", "-legacy.js"),
-  }
+    filename: config.output.filename.replace(".js", "-legacy.js")
+  };
 
   let es6_config = {
     ...config,
@@ -81,7 +81,7 @@ for (let config of webpack_configs) {
         type: "module"
       }
     }
-  }
+  };
 
   let cjs_config = {
     ...config,
@@ -101,11 +101,11 @@ for (let config of webpack_configs) {
     optimization: {
       minimize: false
     }
-  }
+  };
 
   new_configs.push(legacy_config);
   new_configs.push(es6_config);
   new_configs.push(cjs_config);
 }
 
-module.exports = webpack_configs.concat(new_configs);;
+module.exports = webpack_configs.concat(new_configs);

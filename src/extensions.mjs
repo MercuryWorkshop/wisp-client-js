@@ -31,7 +31,7 @@ export class BaseExtension {
       extension.payload = ext_class.Client.parse(buffer.slice(5));
     else if (role === "server")
       extension.payload = ext_class.Server.parse(buffer.slice(5));
-    else 
+    else
       throw TypeError("invalid role");
     return extension;
   }
@@ -67,7 +67,7 @@ export class PasswordAuthExtension extends BaseExtension {
       buffer.view.setUint8(0, this.required);
       return buffer;
     }
-  }
+  };
 
   static Client = class {
     constructor({username, password}) {
@@ -91,7 +91,7 @@ export class PasswordAuthExtension extends BaseExtension {
       buffer.view.setUint16(1, password_buffer.size, true);
       return buffer.concat(username_buffer).concat(password_buffer);
     }
-  }
+  };
 }
 
 export class MOTDExtension extends BaseExtension {
@@ -110,7 +110,7 @@ export class MOTDExtension extends BaseExtension {
     serialize() {
       return new WispBuffer(this.message);
     }
-  }
+  };
 
   static Client = EmptyPayload;
 }
@@ -124,7 +124,7 @@ export function parse_extensions(payload_buffer, valid_extensions, role) {
     let ext_payload = payload_buffer.slice(0, 5 + ext_len);
     let ext_class;
     for (let extension of valid_extensions) {
-      if (extension.id !== ext_id) 
+      if (extension.id !== ext_id)
         continue;
       ext_class = extension.constructor;
       break;
@@ -138,16 +138,15 @@ export function parse_extensions(payload_buffer, valid_extensions, role) {
   return parsed_extensions;
 }
 
-export function serialize_extensions(extensions) {{
+export function serialize_extensions(extensions) {
   let ext_buffer = new WispBuffer(0);
-  for (let extension of extensions) {
+  for (let extension of extensions)
     ext_buffer = ext_buffer.concat(extension.serialize());
-  }
   return ext_buffer;
-}}
+}
 
 export const extensions_map = {
   0x01: UDPExtension,
   0x02: PasswordAuthExtension,
   0x04: MOTDExtension
-}
+};

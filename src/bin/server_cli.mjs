@@ -4,7 +4,7 @@ import http from "node:http";
 import path from "node:path";
 import { promises as fs } from "fs";
 
-import { server as wisp, logging, extensions } from "@mercuryworkshop/wisp-js/server";
+import { extensions, logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
 import { createRequire } from "module";
 import { Command } from "commander";
 
@@ -23,19 +23,25 @@ program
 program
   .option("-H, --host <host>", "The hostname the server will listen on.", "127.0.0.1")
   .option("-P, --port <port>", "The port number to run the server on.", parseInt(process.env.PORT || "5001"))
-  .option("-L, --logging <log_level>", "The log level to use. This is either DEBUG, INFO, WARN, ERROR, or NONE.", "INFO")
+  .option(
+    "-L, --logging <log_level>",
+    "The log level to use. This is either DEBUG, INFO, WARN, ERROR, or NONE.",
+    "INFO"
+  )
   .option("-S, --static <static_dir>", "The directory to serve static files from. (optional)")
-  .option("-C, --config <config_path>", "The path to your Wisp server config file. This is the same format as `wisp.options` in the API. (optional)")
-  .option("-O, --options <options_json>", "A JSON string to set the Wisp config without using a file. (optional)")
+  .option(
+    "-C, --config <config_path>",
+    "The path to your Wisp server config file. This is the same format as `wisp.options` in the API. (optional)"
+  )
+  .option("-O, --options <options_json>", "A JSON string to set the Wisp config without using a file. (optional)");
 
 program.parse();
 const opts = program.opts();
 
 //set up server settings
 opts.logging = opts.logging.toUpperCase();
-if (["DEBUG", "INFO", "WARN", "ERROR", "NONE"].includes(opts.logging)) {
+if (["DEBUG", "INFO", "WARN", "ERROR", "NONE"].includes(opts.logging))
   logging.set_level(logging[opts.logging]);
-}
 else {
   console.error("Invalid log level: " + opts.logging);
   console.error("Valid choices: DEBUG, INFO, WARN, ERROR, NONE");
@@ -59,11 +65,11 @@ if (opts.config) {
 
 if (opts.options) {
   opts.options = JSON.parse(opts.options);
-  for  (let [key, value] of Object.entries(opts.options))
+  for (let [key, value] of Object.entries(opts.options))
     wisp.options[key] = value;
 }
 
-//start the wisp server 
+//start the wisp server
 const mime_types = {
   "ico": "image/x-icon",
   "html": "text/html",
@@ -84,12 +90,12 @@ const mime_types = {
 const server = http.createServer(async (req, res) => {
   let client_ip = req.socket.address().address;
   let real_ip = wisp.parse_real_ip(req.headers, client_ip);
-  logging.info(`HTTP ${req.method} ${req.url} from ${real_ip}`)
+  logging.info(`HTTP ${req.method} ${req.url} from ${real_ip}`);
 
   if (!opts.static) {
-    res.writeHead(200, { "Content-Type": "text/plain" });
+    res.writeHead(200, {"Content-Type": "text/plain"});
     res.end(`wisp-js-server v${version} is running`);
-    return  
+    return;
   }
 
   try {
@@ -97,9 +103,8 @@ const server = http.createServer(async (req, res) => {
     let served_path = path.join(opts.static, parsed_url.pathname);
 
     let path_stat = await fs.stat(served_path);
-    if (path_stat.isDirectory()) {
+    if (path_stat.isDirectory())
       served_path = path.join(served_path, "index.html");
-    }
 
     let data = await fs.readFile(served_path);
     let file_ext = served_path.split(".").reverse()[0];
@@ -108,7 +113,6 @@ const server = http.createServer(async (req, res) => {
     res.writeHead(200, {"Content-Type": content_type});
     res.end(data);
   }
-
   catch (err) {
     if (err.code == "ENOENT") {
       res.writeHead(404, {"Content-Type": "text/plain"});
@@ -116,7 +120,7 @@ const server = http.createServer(async (req, res) => {
     }
     else {
       res.writeHead(500, {"Content-Type": "text/plain"});
-      res.end("500 internal server error:\n" + err);  
+      res.end("500 internal server error:\n" + err);
     }
   }
 });

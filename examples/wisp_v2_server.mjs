@@ -1,9 +1,9 @@
-import { server as wisp, logging, extensions } from "@mercuryworkshop/wisp-js/server";
+import { extensions, logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
 
 import http from "node:http";
 
 const server = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.writeHead(200, {"Content-Type": "text/plain"});
   res.end("wisp-js server running");
 });
 
@@ -12,7 +12,7 @@ wisp.options.port_whitelist = [
   [5000, 6000],
   80,
   443
-]
+];
 wisp.options.allow_private_ips = true;
 wisp.options.allow_loopback_ips = true;
 wisp.options.wisp_version = 2;

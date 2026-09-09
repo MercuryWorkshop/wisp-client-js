@@ -3,15 +3,15 @@ import { ClientConnection } from "./connection.mjs";
 
 //polyfill the DOM Websocket API so that applications using wsproxy can easily use wisp with minimal changes
 
-const RealCloseEvent = (global_this.CloseEvent || Event);
+const RealCloseEvent = global_this.CloseEvent || Event;
 export const _wisp_connections = {};
 
 export class WispWebSocket extends EventTarget {
   static CONNECTING = 0;
-  static OPEN = 1
+  static OPEN = 1;
   static CLOSING = 2;
   static CLOSED = 3;
-  constructor(url, protocols=null, options = {}) {
+  constructor(url, protocols = null, options = {}) {
     super();
     this.url = url;
     this.protocols = protocols;
@@ -41,7 +41,7 @@ export class WispWebSocket extends EventTarget {
   fake_event_send(event) {
     this["on" + event.type]?.(event);
     this.dispatchEvent(event);
-	};
+  }
 
   init_connection() {
     //create the stream
@@ -53,10 +53,10 @@ export class WispWebSocket extends EventTarget {
         this.init_stream();
       };
       this.connection.onclose = () => {
-        this.on_conn_close()
+        this.on_conn_close();
       };
       this.connection.onerror = () => {
-        this.on_conn_close()
+        this.on_conn_close();
       };
       _wisp_connections[this.real_url] = this.connection;
     }
@@ -75,9 +75,8 @@ export class WispWebSocket extends EventTarget {
 
   on_conn_close() {
     this._ready_state = this.CLOSED;
-    if (_wisp_connections[this.real_url]) {
+    if (_wisp_connections[this.real_url])
       this.fake_event_send(new Event("error"));
-    }
     delete _wisp_connections[this.real_url];
   }
 
@@ -87,15 +86,12 @@ export class WispWebSocket extends EventTarget {
 
     this.stream.onmessage = (raw_data) => {
       let data;
-      if (this.binaryType == "blob") {
+      if (this.binaryType == "blob")
         data = new Blob(raw_data);
-      }
-      else if (this.binaryType == "arraybuffer") {
+      else if (this.binaryType == "arraybuffer")
         data = raw_data.buffer;
-      }
-      else {
+      else
         throw "invalid binaryType string";
-      }
       this.fake_event_send(new MessageEvent("message", {data: data}));
     };
 
@@ -110,32 +106,26 @@ export class WispWebSocket extends EventTarget {
   send(data) {
     let data_array;
 
-    if (data instanceof Uint8Array) {
-      data_array = data;  
-    }
-    else if (typeof data === "string") {
+    if (data instanceof Uint8Array)
+      data_array = data;
+    else if (typeof data === "string")
       data_array = new TextEncoder().encode(data);
-    }
     else if (data instanceof Blob) {
       data.arrayBuffer().then(array_buffer => {
         this.send(array_buffer);
       });
       return;
     }
-    else if (data instanceof ArrayBuffer) {
+    else if (data instanceof ArrayBuffer)
       data_array = new Uint8Array(data);
-    }
     //dataview objects or any other typedarray
-    else if (ArrayBuffer.isView(data)) {
+    else if (ArrayBuffer.isView(data))
       data_array = new Uint8Array(data.buffer);
-    }
-    else {
+    else
       throw "invalid data type to be sent";
-    }
 
-    if (!this.stream) {
+    if (!this.stream)
       throw "websocket is not ready";
-    }
     this.stream.send(data_array);
   }
 
@@ -145,9 +135,8 @@ export class WispWebSocket extends EventTarget {
 
   get bufferedAmount() {
     let total = 0;
-    for (const msg of this.stream.send_buffer) {
+    for (const msg of this.stream.send_buffer)
       total += msg.length;
-    }
     return total;
   }
 

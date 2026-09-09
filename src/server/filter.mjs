@@ -8,14 +8,14 @@ export class AccessDeniedError extends Error {}
 
 //helper functions for the whitelist/blacklist logic
 function check_port_range(entry, port) {
-  return (entry === port) || (entry[0] <= port && entry[1] >= port)
+  return (entry === port) || (entry[0] <= port && entry[1] >= port);
 }
 function check_whitelist(entries, filter) {
   let matched = false;
   for (let entry of entries) {
     if (filter(entry)) {
       matched = true;
-      break
+      break;
     }
   }
   return !matched;
@@ -24,7 +24,7 @@ function check_blacklist(entries, filter) {
   for (let entry of entries) {
     if (filter(entry))
       return true;
-    }
+  }
   return false;
 }
 
@@ -34,16 +34,16 @@ function check_ip_range(ip, range) {
 
 //check if an ip is blocked
 export function is_ip_blocked(ip_str) {
-  if (!ipaddr.isValid(ip_str)) 
+  if (!ipaddr.isValid(ip_str))
     return false;
   let ip = ipaddr.parse(ip_str);
 
   let loopback_ranges = ["loopback", "unspecified"];
   let private_ranges = ["broadcast", "linkLocal", "carrierGradeNat", "private", "reserved"];
 
-  if (!options.allow_loopback_ips && check_ip_range(ip, loopback_ranges)) 
+  if (!options.allow_loopback_ips && check_ip_range(ip, loopback_ranges))
     return true;
-  if (!options.allow_private_ips && check_ip_range(ip, private_ranges)) 
+  if (!options.allow_private_ips && check_ip_range(ip, private_ranges))
     return true;
   return false;
 }
@@ -68,7 +68,7 @@ export async function is_stream_allowed(connection, type, hostname, port) {
 
   //check if the port is blocked
   if (options.port_whitelist) {
-    if (check_whitelist(options.port_whitelist, (entry) => check_port_range(entry, port))) 
+    if (check_whitelist(options.port_whitelist, (entry) => check_port_range(entry, port)))
       return close_reasons.HostBlocked;
   }
   else if (options.port_blacklist) {
@@ -88,22 +88,21 @@ export async function is_stream_allowed(connection, type, hostname, port) {
     }
     catch {}
   }
-  if (is_ip_blocked(ip_str)) 
+  if (is_ip_blocked(ip_str))
     return close_reasons.HostBlocked;
 
   //don't check stream counts if there isn't an associated wisp connection (with wsproxy for example)
-  if (!connection) 
+  if (!connection)
     return 0;
 
   //check for stream count limits
-  if (options.stream_limit_total !== -1 && Object.keys(connection.streams).length >= options.stream_limit_total) 
+  if (options.stream_limit_total !== -1 && Object.keys(connection.streams).length >= options.stream_limit_total)
     return close_reasons.ConnThrottled;
   if (options.stream_limit_per_host !== -1) {
     let streams_per_host = 0;
     for (let stream of connection.streams) {
-      if (stream.socket.hostname === hostname) {
+      if (stream.socket.hostname === hostname)
         streams_per_host++;
-      }
     }
     if (streams_per_host >= options.stream_limit_per_host)
       return close_reasons.ConnThrottled;

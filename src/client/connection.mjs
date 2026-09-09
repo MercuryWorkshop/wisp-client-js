@@ -1,18 +1,18 @@
 import * as compat from "../compat.mjs";
 
 import {
+  ClosePayload,
+  ConnectPayload,
+  DataPayload,
+  InfoPayload,
   packet_classes,
   packet_types,
   stream_types,
-  WispBuffer, 
-  WispPacket, 
-  ConnectPayload, 
-  DataPayload, 
-  ClosePayload,
-  InfoPayload
+  WispBuffer,
+  WispPacket
 } from "../packet.mjs";
 
-import { MOTDExtension, UDPExtension, serialize_extensions, parse_extensions } from "../extensions.mjs";
+import { MOTDExtension, parse_extensions, serialize_extensions, UDPExtension } from "../extensions.mjs";
 
 class ClientStream {
   constructor(hostname, port, websocket, connection, stream_id, stream_type, buffer_size) {
@@ -54,9 +54,8 @@ class ClientStream {
   continue_received(buffer_size) {
     this.buffer_size = buffer_size;
     //send buffered data now
-    while (this.buffer_size > 0 && this.send_buffer.length > 0) {
+    while (this.buffer_size > 0 && this.send_buffer.length > 0)
       this.send(this.send_buffer.shift());
-    }
   }
 
   //construct and send a CLOSE packet
@@ -77,9 +76,8 @@ class ClientStream {
 
 export class ClientConnection {
   constructor(wisp_url, {wisp_version, wisp_extensions} = {}) {
-    if (!wisp_url.endsWith("/")) {
+    if (!wisp_url.endsWith("/"))
       throw new TypeError("wisp endpoints must end with a trailing forward slash");
-    }
 
     this.wisp_url = wisp_url;
     this.wisp_version = wisp_version || 2;
@@ -102,9 +100,8 @@ export class ClientConnection {
     this.onerror = () => {};
     this.onmessage = () => {};
 
-    if (this.wisp_version === 2 && this.wisp_extensions === null) {
+    if (this.wisp_version === 2 && this.wisp_extensions === null)
       this.add_extensions();
-    }
 
     this.connect_ws();
   }
@@ -158,11 +155,10 @@ export class ClientConnection {
       if (packet.type === packet_types.CONTINUE) {
         this.max_buffer_size = packet.payload.buffer_remaining;
         this.connected = true;
-        if (!this.info_received) {
+        if (!this.info_received)
           this.wisp_version = 1;
-        }
       }
-      
+
       if (packet.type === packet_types.INFO && this.wisp_version === 2) {
         let server_extensions = parse_extensions(packet.payload.extensions, this.wisp_extensions, "server");
         for (let server_ext of server_extensions) {
@@ -174,7 +170,7 @@ export class ClientConnection {
           }
         }
 
-        this.info_received = true; 
+        this.info_received = true;
         this.server_motd = this.server_exts[MOTDExtension.id]?.payload?.message;
         this.udp_enabled = !!this.server_exts[UDPExtension.id];
 
@@ -194,25 +190,20 @@ export class ClientConnection {
     }
 
     if (typeof stream === "undefined") {
-      console.warn(`wisp client warning: received a ${packet_classes[packet.type].name} packet for a stream which doesn't exist`);
+      console.warn(
+        `wisp client warning: received a ${packet_classes[packet.type].name} packet for a stream which doesn't exist`
+      );
       return;
     }
 
-    if (packet.type === packet_types.DATA) {
+    if (packet.type === packet_types.DATA)
       stream.onmessage(packet.payload_bytes.bytes);
-    }
-
-    else if (packet.type === packet_types.CONTINUE) { //other CONTINUE packets
+    else if (packet.type === packet_types.CONTINUE) //other CONTINUE packets
       stream.continue_received(packet.payload.buffer_remaining);
-    }
-
-    else if (packet.type === packet_types.CLOSE) {
+    else if (packet.type === packet_types.CLOSE)
       this.close_stream(stream, packet.payload.reason);
-    }
-
-    else {
+    else
       console.warn(`wisp client warning: received an invalid packet of type ${packet.type}`);
-    }
   }
 
   close() {
@@ -222,19 +213,17 @@ export class ClientConnection {
   cleanup() {
     this.connected = false;
     this.connecting = false;
-    for (let stream_id of Object.keys(this.active_streams)) {
+    for (let stream_id of Object.keys(this.active_streams))
       this.close_stream(this.active_streams[stream_id], 0x03);
-    }
   }
 
-  create_stream(hostname, port, type=0x01) {
+  create_stream(hostname, port, type = 0x01) {
     let stream_type = type;
-    if (typeof stream_type === "string") 
+    if (typeof stream_type === "string")
       stream_type = type === "udp" ? stream_types.UDP : stream_types.TCP;
 
-    if (stream_type == stream_types.UDP && !this.udp_enabled) {
+    if (stream_type == stream_types.UDP && !this.udp_enabled)
       throw new Error("udp is not enabled for this wisp connection");
-    }
 
     const stream_id = this.next_stream_id++;
     const stream = new ClientStream(hostname, port, this.ws, this, stream_id, stream_type, this.max_buffer_size);
@@ -260,4 +249,3 @@ export class ClientConnection {
     delete this.active_streams[stream.stream_id];
   }
 }
-

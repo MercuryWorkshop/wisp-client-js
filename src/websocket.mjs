@@ -9,8 +9,8 @@ export function get_conn_id() {
 
 //an async websocket wrapper
 export class AsyncWebSocket {
-  send_buffer_size = 32*1024*1024;
-  
+  send_buffer_size = 32 * 1024 * 1024;
+
   constructor(ws) {
     this.ws = ws;
     this.connected = false;
@@ -22,14 +22,14 @@ export class AsyncWebSocket {
       this.ws.onopen = () => {
         this.connected = true;
         resolve();
-      }
+      };
       this.ws.onmessage = (event) => {
         this.data_queue.put(event.data);
-      }
+      };
       this.ws.onclose = () => {
         if (!this.connected) reject();
         else this.data_queue.close();
-      }
+      };
       if (this.ws.readyState === this.ws.OPEN) {
         this.connected = true;
         resolve();
@@ -42,21 +42,20 @@ export class AsyncWebSocket {
   }
 
   async send(data) {
-    if (data instanceof WispPacket) {
-      data = data.serialize().bytes
-    }
+    if (data instanceof WispPacket)
+      data = data.serialize().bytes;
 
     this.ws.send(data);
-    if (this.ws.bufferedAmount <= this.send_buffer_size) {
+    if (this.ws.bufferedAmount <= this.send_buffer_size)
       return;
-    }
 
     //if the send buffer is too full, throttle the upload
     while (true) {
-      if (this.ws.bufferedAmount <= this.send_buffer_size / 2) {
+      if (this.ws.bufferedAmount <= this.send_buffer_size / 2)
         break;
-      }
-      await new Promise((resolve) => {setTimeout(resolve, 10)});
+      await new Promise((resolve) => {
+        setTimeout(resolve, 10);
+      });
     }
   }
 
@@ -103,9 +102,8 @@ export class AsyncQueue {
   }
 
   async get() {
-    if (this.size > 0) {
+    if (this.size > 0)
       return this.get_now();
-    }
 
     //wait until there is an item available in the queue
     await new Promise((resolve) => {

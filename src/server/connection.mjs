@@ -2,19 +2,19 @@ import * as logging from "../logging.mjs";
 import * as filter from "./filter.mjs";
 import { AsyncQueue, AsyncWebSocket, get_conn_id } from "../websocket.mjs";
 import { NodeTCPSocket, NodeUDPSocket } from "./net.mjs";
-import { 
-  WispBuffer,
-  WispPacket,
-  ContinuePayload,
+import {
+  close_reasons,
   ClosePayload,
   ConnectPayload,
+  ContinuePayload,
   DataPayload,
   InfoPayload,
   stream_types,
-  close_reasons
+  WispBuffer,
+  WispPacket
 } from "../packet.mjs";
 import { options } from "./options.mjs";
-import { MOTDExtension, UDPExtension, serialize_extensions, parse_extensions } from "../extensions.mjs";
+import { MOTDExtension, parse_extensions, serialize_extensions, UDPExtension } from "../extensions.mjs";
 
 export class HandshakeError extends Error {}
 
@@ -24,7 +24,7 @@ export class ServerStream {
   constructor(stream_id, conn, socket) {
     this.stream_id = stream_id;
     this.conn = conn;
-    this.socket = socket;    
+    this.socket = socket;
     this.send_buffer = new AsyncQueue(ServerStream.buffer_size);
     this.packets_sent = 0;
   }
@@ -46,9 +46,8 @@ export class ServerStream {
   async tcp_to_ws() {
     while (true) {
       let data = await this.socket.recv();
-      if (data == null) {
+      if (data == null)
         break;
-      }
 
       this.socket.pause();
       let packet = new WispPacket({
@@ -67,15 +66,13 @@ export class ServerStream {
   async ws_to_tcp() {
     while (true) {
       let data = await this.send_buffer.get();
-      if (data == null) {
+      if (data == null)
         break; //stream closed
-      }
       await this.socket.send(data);
 
       this.packets_sent++;
-      if (this.packets_sent % (ServerStream.buffer_size / 2) !== 0) {
+      if (this.packets_sent % (ServerStream.buffer_size / 2) !== 0)
         continue;
-      }
       let packet = new WispPacket({
         type: ContinuePayload.type,
         stream_id: this.stream_id,
@@ -117,7 +114,7 @@ export class ServerConnection {
     this.ping_interval = ping_interval || 30;
     this.wisp_version = wisp_version || options.wisp_version;
     this.wisp_extensions = wisp_extensions || null;
-    
+
     this.ping_task = null;
     this.streams = {};
     this.conn_id = get_conn_id();
@@ -125,28 +122,24 @@ export class ServerConnection {
     this.server_exts = {};
     this.client_exts = {};
 
-    if (this.wisp_version === 2 && this.wisp_extensions === null) {
+    if (this.wisp_version === 2 && this.wisp_extensions === null)
       this.add_extensions();
-    }
   }
 
   add_extensions() {
     this.wisp_extensions = [];
-    if (options.allow_udp_streams) 
+    if (options.allow_udp_streams)
       this.wisp_extensions.push(new UDPExtension({server_config: {}}));
     if (options.wisp_motd)
-      this.wisp_extensions.push(new MOTDExtension({server_config: {
-        message: options.wisp_motd
-      }}));
+      this.wisp_extensions.push(new MOTDExtension({server_config: {message: options.wisp_motd}}));
   }
 
   async setup() {
     logging.info(`setting up new wisp v${this.wisp_version} connection with id ${this.conn_id}`);
 
     await this.ws.connect();
-    if (this.wisp_version == 2) {
-      await this.setup_wisp_v2()
-    }
+    if (this.wisp_version == 2)
+      await this.setup_wisp_v2();
 
     //send initial continue packet
     let continue_packet = new WispPacket({
@@ -162,7 +155,7 @@ export class ServerConnection {
       this.ping_task = setInterval(() => {
         logging.debug(`(${this.conn_id}) sending websocket ping`);
         this.ws.ws.ping();
-      }, this.ping_interval * 1000);  
+      }, this.ping_interval * 1000);
     }
   }
 
@@ -234,12 +227,10 @@ export class ServerConnection {
 
   async close_stream(stream_id, reason = null, quiet = false) {
     let stream = this.streams[stream_id];
-    if (stream == null) {
+    if (stream == null)
       return;
-    }
-    if (reason && !quiet) {
+    if (reason && !quiet)
       logging.info(`(${this.conn_id}) closing stream to ${stream.socket.hostname} for reason ${reason}`);
-    }
     await stream.close(reason);
     delete this.streams[stream_id];
   }
@@ -255,40 +246,35 @@ export class ServerConnection {
 
     if (packet.type === ConnectPayload.type) {
       let type_info = packet.payload.stream_type === stream_types.TCP ? "TCP" : "UDP";
-      logging.info(`(${this.conn_id}) opening new ${type_info} stream to ${packet.payload.hostname}:${packet.payload.port}`);
+      logging.info(
+        `(${this.conn_id}) opening new ${type_info} stream to ${packet.payload.hostname}:${packet.payload.port}`
+      );
       this.create_stream(
-        packet.stream_id, 
-        packet.payload.stream_type, 
-        packet.payload.hostname.trim(), 
+        packet.stream_id,
+        packet.payload.stream_type,
+        packet.payload.hostname.trim(),
         packet.payload.port
-      )
+      );
     }
-
-    else if (packet.type === DataPayload.type) {
+    else if (packet.type === DataPayload.type)
       stream.put_data(packet.payload.data.bytes);
-    }
-
-    else if (packet.type == ContinuePayload.type) {
+    else if (packet.type == ContinuePayload.type)
       logging.warn(`(${this.conn_id}) client sent a CONTINUE packet, this should never be possible`);
-    }
-
-    else if (packet.type == ClosePayload.type) {
+    else if (packet.type == ClosePayload.type)
       this.close_stream(packet.stream_id, packet.reason);
-    }
   }
 
   async run() {
     while (true) {
       let data;
       data = await this.ws.recv();
-      if (data == null) {
+      if (data == null)
         break; //websocket closed
-      }
       if (typeof data === "string") {
         logging.warn(`(${this.conn_id}) routing a packet failed - unexpected ws text frame`);
         continue;
       }
-      
+
       try {
         //note: data is an arraybuffer so the uint8array constructor does not copy
         this.route_packet(new WispBuffer(new Uint8Array(data)));
@@ -297,15 +283,14 @@ export class ServerConnection {
         logging.warn(`(${this.conn_id}) routing a packet failed - ${error}`);
       }
     }
-    
+
     await this.cleanup();
   }
 
   async cleanup() {
     //clean up all streams when the websocket is closed
-    for (let stream_id of Object.keys(this.streams)) {
+    for (let stream_id of Object.keys(this.streams))
       await this.close_stream(stream_id);
-    }
     clearInterval(this.ping_task);
     logging.info(`(${this.conn_id}) wisp connection closed`);
     this.ws.close();

@@ -14,15 +14,15 @@ conn.onopen = () => {
   stream.onmessage = (data) => {
     let text = new TextDecoder().decode(data);
     console.log("message from stream 1: ", text);
-  }
+  };
   stream.onclose = () => {
     conn.close();
-  }
+  };
 
   let payload = "GET /cdn-cgi/trace HTTP/1.1\r\nHost: cloudflare.com\r\nConnection: close\r\n\r\n";
   stream.send(new TextEncoder().encode(payload));
-}
+};
 
 conn.onclose = () => {
   console.log("stream 1 closed");
-}
+};

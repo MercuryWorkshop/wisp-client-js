@@ -1,13 +1,12 @@
 import { client } from "@mercuryworkshop/wisp-js/client";
-const { ClientConnection, WispWebSocket, _wisp_connections } = client;
+const {ClientConnection, WispWebSocket, _wisp_connections} = client;
 
 let ws_url = `ws://localhost:5001/ws/`;
-if (typeof process === "undefined") {
+if (typeof process === "undefined")
   ws_url = location.href.replace("http", "ws");
-}
 
 function run_demo() {
-  let ws = new WispWebSocket(ws_url+"phishing.testcategory.com:80");
+  let ws = new WispWebSocket(ws_url + "phishing.testcategory.com:80");
   ws.binaryType = "arraybuffer";
   ws.addEventListener("open", () => {
     let payload = "GET / HTTP/1.1\r\nHost: phishing.testcategory.com\r\nConnection: keepalive\r\n\r\n";
@@ -21,7 +20,7 @@ function run_demo() {
     console.log("stream 1 closed");
   });
 
-  let ws2 = new WispWebSocket(ws_url+"www.google.com:80");
+  let ws2 = new WispWebSocket(ws_url + "www.google.com:80");
   ws2.binaryType = "arraybuffer";
   ws2.addEventListener("open", () => {
     let payload = "GET / HTTP/1.1\r\nHost: www.google.com\r\nConnection: close\r\n\r\n";
@@ -40,12 +39,12 @@ function run_demo() {
     let stream = conn.create_stream("127.0.0.1", 5553, "udp");
     stream.onmessage = (data) => {
       console.log("message from stream 3: ", new TextDecoder().decode(data));
-    }
+    };
     stream.send(new TextEncoder().encode("hello"));
-  }
+  };
   conn.onclose = () => {
     console.log("stream 3 closed");
-  }
+  };
 }
 
 globalThis.ClientConnection = ClientConnection;

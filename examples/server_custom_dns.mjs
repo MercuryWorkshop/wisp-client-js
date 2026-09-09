@@ -1,8 +1,8 @@
-import { server as wisp, logging } from "@mercuryworkshop/wisp-js/server";
+import { logging, server as wisp } from "@mercuryworkshop/wisp-js/server";
 import http from "node:http";
 
 const server = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
+  res.writeHead(200, {"Content-Type": "text/plain"});
   res.end("wisp server js rewrite");
 });
 
