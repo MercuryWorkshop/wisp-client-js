@@ -7,6 +7,10 @@ const RealCloseEvent = (global_this.CloseEvent || Event);
 export const _wisp_connections = {};
 
 export class WispWebSocket extends EventTarget {
+  static CONNECTING = 0;
+  static OPEN = 1
+  static CLOSING = 2;
+  static CLOSED = 3;
   constructor(url, protocols=null, options = {}) {
     super();
     this.url = url;
@@ -17,15 +21,11 @@ export class WispWebSocket extends EventTarget {
     this.connection = null;
 
     //legacy event handlers
-    this.onopen = () => {};
-    this.onerror = () => {};
-    this.onmessage = () => {};
-    this.onclose = () => {};
+    this.onopen = null;
+    this.onmessage = null;
+    this.onclose = null;
+    this.onerror = null;
 
-    this.CONNECTING = 0;
-    this.OPEN = 1;
-    this.CLOSING = 2;
-    this.CLOSED = 3;
     this._ready_state = this.CONNECTING;
 
     //parse the wsproxy url
@@ -38,14 +38,10 @@ export class WispWebSocket extends EventTarget {
     this.init_connection();
   }
 
-  on_conn_close() {
-    this._ready_state = this.CLOSED;
-    if (_wisp_connections[this.real_url]) {
-      this.onerror(new Event("error"));
-      this.dispatchEvent(new Event("error"));
-    }
-    delete _wisp_connections[this.real_url];
-  }
+  fake_event_send(event) {
+    this["on" + event.type]?.(event);
+    this.dispatchEvent(event);
+	};
 
   init_connection() {
     //create the stream
@@ -77,6 +73,14 @@ export class WispWebSocket extends EventTarget {
     }
   }
 
+  on_conn_close() {
+    this._ready_state = this.CLOSED;
+    if (_wisp_connections[this.real_url]) {
+      this.fake_event_send(new Event("error"));
+    }
+    delete _wisp_connections[this.real_url];
+  }
+
   init_stream() {
     this._ready_state = this.OPEN;
     this.stream = this.connection.create_stream(this.host, this.port);
@@ -92,21 +96,15 @@ export class WispWebSocket extends EventTarget {
       else {
         throw "invalid binaryType string";
       }
-      let msg_event = new MessageEvent("message", {data: data});
-      this.onmessage(msg_event);
-      this.dispatchEvent(msg_event);
+      this.fake_event_send(new MessageEvent("message", {data: data}));
     };
 
     this.stream.onclose = (reason) => {
       this._ready_state = this.CLOSED;
-      let close_event = new RealCloseEvent("close", {code: reason}); 
-      this.onclose(close_event);
-      this.dispatchEvent(close_event);
+      this.fake_event_send(new RealCloseEvent("close", {code: reason}));
     };
 
-    let open_event = new Event("open");
-    this.onopen(open_event);
-    this.dispatchEvent(open_event);
+    this.fake_event_send(new Event("open"));
   }
 
   send(data) {
@@ -147,7 +145,7 @@ export class WispWebSocket extends EventTarget {
 
   get bufferedAmount() {
     let total = 0;
-    for (let msg of this.stream.send_buffer) {
+    for (const msg of this.stream.send_buffer) {
       total += msg.length;
     }
     return total;
