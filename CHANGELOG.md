@@ -1,3 +1,7 @@
+## v0.5.0 (9/9/26):
+- Relicense entire project to the GNU LGPL v3
+- Some internal cleanup
+
 ## v0.4.1 (12/4/25):
 - Fixed downgrading from Wisp v2 to v1 on the client
 
